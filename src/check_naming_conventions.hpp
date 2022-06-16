@@ -7,7 +7,7 @@
 #include <ParamTypePolicy.hpp>
 #include <srcSAXEventDispatcher.hpp>
 #include <FunctionSignaturePolicy.hpp>
-#include <unordered_map>
+
 struct IdentifierData{
     IdentifierData(std::string type, std::string name, std::string context, std::string fileName, std::string programmingLanguageName, std::string lineNumber) 
     : type{type}, name{name}, context{context}, fileName{fileName}, programmingLanguageName{programmingLanguageName}, lineNumber{lineNumber} {}
@@ -20,8 +20,8 @@ struct IdentifierData{
     std::string programmingLanguageName;
 
     friend std::ostream& operator<<(std::ostream& outputStream, const IdentifierData& identifier){
-        outputStream<<identifier.type<<" "<<identifier.name<<" "<<identifier.context<<" "
-                    <<identifier.lineNumber<<" "<<identifier.fileName<<" "<<identifier.programmingLanguageName;
+        outputStream<<identifier.type<<","<<identifier.name<<","<<identifier.context<<","
+                    <<identifier.lineNumber<<","<<identifier.fileName<<","<<identifier.programmingLanguageName;
         return outputStream;
     }
 };
@@ -35,19 +35,12 @@ class CheckNamingConventionsPolicy : public srcSAXEventDispatch::EventListener, 
             declPolicy.AddListener(this);
             paramPolicy.AddListener(this);
             functionPolicy.AddListener(this);
-            process_map = {
-                {"FUNCTION", [this](std::string identifier)
-                    {
-                        FunctionChecker(identifier);
-                    } 
-                },
-            };
         }
         void Notify(const PolicyDispatcher *policy, const srcSAXEventDispatch::srcSAXEventContext &ctx) override {
             using namespace srcSAXEventDispatch;
             if(typeid(DeclTypePolicy) == typeid(*policy)){
                 declarationData = *policy->Data<DeclData>();
-                if(!(declarationData.nameOfIdentifier.empty() || declarationData.nameOfType.empty())){
+                if(!(declarationData.nameOfIdentifier.empty()||declarationData.nameOfType.empty())){
                     if(ctx.IsOpen(ParserState::function)){
 
                         CollectIdentifierTypeNameAndContext(declarationData.nameOfType, declarationData.nameOfIdentifier, "DECLARATION", ctx.currentLineNumber, 
@@ -83,20 +76,7 @@ class CheckNamingConventionsPolicy : public srcSAXEventDispatch::EventListener, 
         void CollectIdentifierTypeNameAndContext(std::string identifierType, std::string identifierName, std::string codeContext,
                                                  unsigned int lineNumber, std::string fileName, std::string programmingLanguageName){
                 allSystemIdentifiers.push_back(IdentifierData(identifierType, identifierName, codeContext, std::to_string(lineNumber), fileName, programmingLanguageName));
-        }
-        void FunctionChecker(std::string identifier){
-            std::cout<<"FUNC"<<std::endl;
-        }
-        void CheckIdentifiersForCompliance(){
-
-            std::unordered_map<std::string, std::function<void(std::string)>>::const_iterator process;
-            for(auto identifier : allSystemIdentifiers){
-                process = process_map.find(identifier.context);
-                if (process != process_map.end()) {
-                    process->second(identifier.name);
-                }
-            }
-        }
+        }        
         
     protected:
         void *DataInner() const override {
@@ -113,8 +93,7 @@ class CheckNamingConventionsPolicy : public srcSAXEventDispatch::EventListener, 
 
         FunctionSignaturePolicy functionPolicy;
         SignatureData functionData;
-        
-        std::unordered_map< std::string, std::function<void(std::string)>> process_map;
+
         void InitializeEventHandlers(){
             using namespace srcSAXEventDispatch;
             
@@ -147,7 +126,10 @@ class CheckNamingConventionsPolicy : public srcSAXEventDispatch::EventListener, 
                 ctx.dispatcher->RemoveListenerDispatch(&paramPolicy);
             };
             closeEventMap[ParserState::archive] = [this](srcSAXEventContext& ctx) {
-                CheckIdentifiersForCompliance();
+                std::cout<<"type,"<<"name,"<<"context,"<<"line,"<<"filename,"<<"language"<<std::endl;
+                for(auto identifier : allSystemIdentifiers){
+                    std::cout<<identifier<<std::endl;
+                }
             };
         }
 };
