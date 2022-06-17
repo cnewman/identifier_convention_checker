@@ -1,5 +1,6 @@
 import csv, sys
 from enum import Enum
+from spiral import ronin
 
 class CONTEXTS(Enum):
     DECLARATION = 0
@@ -15,13 +16,13 @@ contextsDict = {"DECLARATION": CONTEXTS.DECLARATION,
                 "CLASSNAME": CONTEXTS.CLASSNAME}
 
 def CheckFunctionIdentifier(identifierData):
-    print('hi')
+    split_identifier_data = ronin.split(identifierData['name'])
+    print(split_identifier_data)
 
 
 if __name__ == '__main__':
     with open(sys.argv[1]) as identifier_file:
-        identifier_csv_reader = csv.reader(identifier_file)
+        identifier_csv_reader = csv.DictReader(identifier_file)
         for row in identifier_csv_reader:
-            match contextsDict.get(row[2]):
-                case FUNCTION:
-                    CheckFunctionIdentifier(row)
+            if contextsDict.get(row['context']) == CONTEXTS.DECLARATION:
+                CheckFunctionIdentifier(row)
