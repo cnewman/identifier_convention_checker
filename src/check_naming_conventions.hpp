@@ -9,8 +9,8 @@
 #include <FunctionSignaturePolicy.hpp>
 
 struct IdentifierData{
-    IdentifierData(std::string type, std::string name, std::string context, std::string fileName, std::string programmingLanguageName, std::string lineNumber) 
-    : type{type}, name{name}, context{context}, fileName{fileName}, programmingLanguageName{programmingLanguageName}, lineNumber{lineNumber} {}
+    IdentifierData(std::string type, std::string name, std::string context, std::string fileName, std::string programmingLanguageName, std::string lineNumber, bool isPointer, bool isArray) 
+    : type{type}, name{name}, context{context}, fileName{fileName}, programmingLanguageName{programmingLanguageName}, lineNumber{lineNumber}, isPointer(isPointer), isArray(isArray) {}
     
     std::string type;
     std::string name;
@@ -18,10 +18,13 @@ struct IdentifierData{
     std::string lineNumber;
     std::string fileName;
     std::string programmingLanguageName;
+    bool isPointer;
+    bool isArray;
 
     friend std::ostream& operator<<(std::ostream& outputStream, const IdentifierData& identifier){
         outputStream<<identifier.type<<","<<identifier.name<<","<<identifier.context<<","
-                    <<identifier.lineNumber<<","<<identifier.fileName<<","<<identifier.programmingLanguageName;
+                    <<identifier.lineNumber<<","<<identifier.fileName<<","<<identifier.programmingLanguageName<<","
+                    <<identifier.isPointer<<","<<identifier.isArray;
         return outputStream;
     }
 };
@@ -44,13 +47,13 @@ class CheckNamingConventionsPolicy : public srcSAXEventDispatch::EventListener, 
                     if(ctx.IsOpen(ParserState::function)){
 
                         CollectIdentifierTypeNameAndContext(declarationData.nameOfType, declarationData.nameOfIdentifier, "DECLARATION", ctx.currentLineNumber, 
-                                                            ctx.currentFilePath, ctx.currentFileLanguage);
+                                                            ctx.currentFilePath, ctx.currentFileLanguage, declarationData.isPointer, declarationData.usesSubscript);
 
                     }else if(ctx.IsOpen(ParserState::classn) && !declarationData.nameOfContainingClass.empty() && !declarationData.nameOfType.empty() 
                              && !declarationData.nameOfIdentifier.empty()){
                         
                         CollectIdentifierTypeNameAndContext(declarationData.nameOfType, declarationData.nameOfIdentifier, "ATTRIBUTE", ctx.currentLineNumber, 
-                                                            ctx.currentFilePath, ctx.currentFileLanguage);
+                                                            ctx.currentFilePath, ctx.currentFileLanguage, declarationData.isPointer, declarationData.usesSubscript);
 
                     }
                 }
@@ -59,14 +62,14 @@ class CheckNamingConventionsPolicy : public srcSAXEventDispatch::EventListener, 
                 if(!(parameterData.nameOfIdentifier.empty() || parameterData.nameOfType.empty())){
 
                     CollectIdentifierTypeNameAndContext(parameterData.nameOfType, parameterData.nameOfIdentifier, "PARAMETER", ctx.currentLineNumber, 
-                                                        ctx.currentFilePath, ctx.currentFileLanguage);
+                                                        ctx.currentFilePath, ctx.currentFileLanguage, parameterData.isPointer, parameterData.usesSubscript);
 
                 }
             }else if(typeid(FunctionSignaturePolicy) == typeid(*policy)){
                 functionData = *policy->Data<SignatureData>();
                 if(!(functionData.name.empty() || functionData.returnType.empty())){
                     CollectIdentifierTypeNameAndContext(functionData.returnType, functionData.name, "FUNCTION", ctx.currentLineNumber, 
-                                                        ctx.currentFilePath, ctx.currentFileLanguage);
+                                                        ctx.currentFilePath, ctx.currentFileLanguage, 0, 0);
                 }
             }
         }
@@ -74,8 +77,9 @@ class CheckNamingConventionsPolicy : public srcSAXEventDispatch::EventListener, 
         void NotifyWrite(const PolicyDispatcher *policy, srcSAXEventDispatch::srcSAXEventContext &ctx){}
 
         void CollectIdentifierTypeNameAndContext(std::string identifierType, std::string identifierName, std::string codeContext,
-                                                 unsigned int lineNumber, std::string fileName, std::string programmingLanguageName){
-                allSystemIdentifiers.push_back(IdentifierData(identifierType, identifierName, codeContext, std::to_string(lineNumber), fileName, programmingLanguageName));
+                                                 unsigned int lineNumber, std::string fileName, std::string programmingLanguageName, 
+                                                 bool isPointer, bool isArray){
+                allSystemIdentifiers.push_back(IdentifierData(identifierType, identifierName, codeContext, std::to_string(lineNumber), fileName, programmingLanguageName, isPointer, isArray));
         }        
         
     protected:
@@ -113,7 +117,7 @@ class CheckNamingConventionsPolicy : public srcSAXEventDispatch::EventListener, 
                 if(!ctx.currentClassName.empty()){
 
                     CollectIdentifierTypeNameAndContext("class", ctx.currentClassName, "CLASS", ctx.currentLineNumber, 
-                                                        ctx.currentFilePath, ctx.currentFileLanguage);
+                                                        ctx.currentFilePath, ctx.currentFileLanguage, 0, 0);
                 }
             };
             closeEventMap[ParserState::functionblock] = [this](srcSAXEventContext& ctx){
@@ -126,7 +130,7 @@ class CheckNamingConventionsPolicy : public srcSAXEventDispatch::EventListener, 
                 ctx.dispatcher->RemoveListenerDispatch(&paramPolicy);
             };
             closeEventMap[ParserState::archive] = [this](srcSAXEventContext& ctx) {
-                std::cout<<"type,"<<"name,"<<"context,"<<"line,"<<"filename,"<<"language"<<std::endl;
+                std::cout<<"type,"<<"name,"<<"context,"<<"line,"<<"filename,"<<"language,"<<"pointer,"<<"array,"<<std::endl;
                 for(auto identifier : allSystemIdentifiers){
                     std::cout<<identifier<<std::endl;
                 }
