@@ -5,6 +5,17 @@ import inflect
 
 inflect = inflect.engine()
 
+class NameConventionCharacteristics:
+    def __init__(self):
+        self.name = str()
+        self.usesCamelCase = False
+        self.usesUnderscore = False
+        self.usesAllCapitals = False
+        self.usesAllLowercase = False
+        self.usesMixedStyles = False
+
+identifierNames = []
+
 class CONTEXTS(Enum):
     DECLARATION = 0
     PARAMETER = 1
@@ -20,6 +31,7 @@ contextsDict = {"DECLARATION": CONTEXTS.DECLARATION,
 collectionTypeDict = {}
 primitiveTypeDict = {"int", "char", "long", "float", "double"}
 
+
 def CheckIfIdentifierHasCollectionType(identifierData):
     #If the identifier was used with subscript, it's probably a collection
     if identifierData['array'] == '1':
@@ -32,8 +44,22 @@ def CheckIfIdentifierHasCollectionType(identifierData):
     return False
 
 def CheckLocalIdentifier(identifierData):
-    split_identifier_data = ronin.split(identifierData['name'])
+    currentIdentifierCharacteristics = NameConventionCharacteristics()
+    
+    underscoreUsages = []
+    capitalUsages = []
+    lowercaseUsages = []
 
+    for character in identifierData['name']:
+        if character == '_':
+            underscoreUsages.append(True)
+        if character.isupper():
+            capitalUsages.append(True)
+        if character.islower():
+            lowercaseUsages.append(True)
+
+    split_identifier_data = ronin.split(identifierData['name'])
+    
     # First a check to see if identifier name plurality matches its type. If it is a plural identifier,
     # But its type doesn't look like a collection, then this is a linguistic anti-pattern
     isItPlural = inflect.singular_noun(split_identifier_data[-1])
