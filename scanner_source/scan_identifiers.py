@@ -2,11 +2,13 @@ import csv, sys
 from enum import Enum
 from spiral import ronin
 import inflect
+import enchant
 
 class FinalIdentifierReport:
     def __init__(self):
         self.pluralityUsage = ""
         self.heuristicsUsage = ""
+        self.dictionaryTermUsage = ""
     def setPluralityMessage():
         pass
     def setHeuristicsMessage():
@@ -36,11 +38,27 @@ contextsDict = {"DECLARATION": CONTEXTS.DECLARATION,
                 "FUNCTION": CONTEXTS.FUNCTION,
                 "ATTRIBUTE": CONTEXTS.ATTRIBUTE,
                 "CLASSNAME": CONTEXTS.CLASSNAME}
+
 collectionTypeDict = {}
 primitiveTypeDict = {"int", "char", "long", "float", "double"}
-
-
+genericTerms = {"value", "result", "pointer", "output", "input", "content", "ptr", "in", "out", "val", "res", "begin", "end", "start", "finish", "tok", "token"}
 inflect = inflect.engine()
+englishDictionary = enchant.dict("en_US")
+
+def CheckForDictionaryTerms(identifierData, finalReport):
+    if len(identifierData['name']) <= 2:
+        finalReport.dictionaryTermUsage = ("{identifierName} has less than 3 characters in it. Typically, identifiers should be made up of dictionary terms."
+                                           "Please follow the style guidelines.").format(identifierName=identifierData['name'])
+        return finalReport
+    
+    # #check if all words are dictionary terms
+    # splitIdentifierData = ronin.split(identifierData['name'])
+    # for word in splitIdentifierData:
+    #     if not englishDictionary.check(word):
+    #         pass
+    
+
+    return finalReport
 
 def CheckIfIdentifierHasCollectionType(identifierData):
     #If the identifier was used with subscript, it's probably a collection
@@ -104,6 +122,7 @@ def CheckLocalIdentifier(identifierData):
     finalReport = FinalIdentifierReport()
     finalReport = CheckHeuristics(identifierData, finalReport)
     finalReport = CheckTypeVersusPlurality(identifierData, finalReport)
+    finalReport = CheckForDictionaryTerms(identifierData, finalReport)
     return finalReport
     #print("{name} in {identifier} is {plurality}".format(name=splitIdentifierData[-1], identifier=splitIdentifierData, plurality=inflect.singular_noun(splitIdentifierData[-1])))
 
