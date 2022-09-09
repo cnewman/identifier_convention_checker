@@ -36,6 +36,7 @@ class CONTEXTS(Enum):
     ATTRIBUTE = 3
     CLASSNAME = 4
 
+finalReport = FinalIdentifierReport()
 contextsDict = {"DECLARATION": CONTEXTS.DECLARATION,
                 "PARAMETER": CONTEXTS.PARAMETER,
                 "FUNCTION": CONTEXTS.FUNCTION,
@@ -58,7 +59,7 @@ collectiontypeDict = {"vector", "list", "set", "dictionary", "map"}
 inflect = inflect.engine()
 englishDictionary = enchant.Dict("en_US")
 
-def CheckForDictionaryTerms(identifierData, finalReport):
+def CheckForDictionaryTerms(identifierData):
     if len(identifierData['name']) <= 2:
         finalReport.dictionaryTermUsage = (antiPatternDict["TERM LENGTH"]).format(identifierName=identifierData['name'])
     #check if all words are dictionary terms
@@ -83,7 +84,7 @@ def CheckIfIdentifierHasCollectionType(identifierData):
     
     return False
 
-def CheckHeuristics(identifierData, finalReport):
+def CheckHeuristics(identifierData):
     currentIdentifierCharacteristics = NameConventionCharacteristics()
     
     underscoreUsages = []
@@ -107,13 +108,13 @@ def CheckHeuristics(identifierData, finalReport):
         reportString.append("lower case letters")
     
     if len(reportString) == 3:
-        finalReport.heuristicsUsage = (antiPatternDict["MIXED STYLES"].format(identifierName=identifierData['name'], heuristics=",".join(reportString)))
+        return (antiPatternDict["MIXED STYLES"].format(identifierName=identifierData['name'], heuristics=",".join(reportString)))
     elif any(underscoreUsages) and any(capitalUsages):
-        finalReport.heuristicsUsage = (antiPatternDict["MIXED STYLES"].format(identifierName=identifierData['name'], heuristics=",".join(reportString)))
+        return (antiPatternDict["MIXED STYLES"].format(identifierName=identifierData['name'], heuristics=",".join(reportString)))
     
     return finalReport
 
-def CheckTypeVersusPlurality(identifierData, finalReport):
+def CheckTypeVersusPlurality(identifierData):
     splitIdentifierData = ronin.split(identifierData['name'])
     # First a check to see if identifier name plurality matches its type. If it is a plural identifier,
     # But its type doesn't look like a collection, then this is a linguistic anti-pattern
@@ -121,18 +122,17 @@ def CheckTypeVersusPlurality(identifierData, finalReport):
     if(isItPlural != False): #Inflect is telling us that this word is plural.
         shouldIdentifierBePlural = CheckIfIdentifierHasCollectionType(identifierData)
         if shouldIdentifierBePlural != True:
-            finalReport.pluralityUsage = antiPatternDict["PLURAL MISUSE"].format(identifier=identifierData['name'], typename=identifierData['type'])
+            return antiPatternDict["PLURAL MISUSE"].format(identifier=identifierData['name'], typename=identifierData['type'])
     else: #Inflect is telling us that this word is singular.
         shouldIdentifierBePlural = CheckIfIdentifierHasCollectionType(identifierData)
         if shouldIdentifierBePlural != False:
-            finalReport.pluralityUsage = antiPatternDict["SINGULAR MISUSE"].format(identifier=identifierData['name'], typename=identifierData['type'])
-    return finalReport
+            return antiPatternDict["SINGULAR MISUSE"].format(identifier=identifierData['name'], typename=identifierData['type'])
+    return str()
 
 def CheckLocalIdentifier(identifierData):
-    finalReport = FinalIdentifierReport()
-    finalReport = CheckHeuristics(identifierData, finalReport)
-    finalReport = CheckTypeVersusPlurality(identifierData, finalReport)
-    finalReport = CheckForDictionaryTerms(identifierData, finalReport)
+    finalReport = CheckHeuristics(identifierData)
+    finalReport = CheckTypeVersusPlurality(identifierData)
+    finalReport = CheckForDictionaryTerms(identifierData)
     return finalReport
     #print("{name} in {identifier} is {plurality}".format(name=splitIdentifierData[-1], identifier=splitIdentifierData, plurality=inflect.singular_noun(splitIdentifierData[-1])))
 
