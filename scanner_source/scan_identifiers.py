@@ -5,10 +5,10 @@ import inflect
 import enchant
 
 class FinalIdentifierReport:
-    def __init__(self):
-        self.pluralityUsage = ""
-        self.heuristicsUsage = ""
-        self.dictionaryTermUsage = ""
+    def __init__(self, plurality, heuristics, dictionary):
+        self.pluralityUsage = plurality
+        self.heuristicsUsage = heuristics
+        self.dictionaryTermUsage = dictionary
     def setPluralityMessage():
         pass
     def setHeuristicsMessage():
@@ -36,7 +36,6 @@ class CONTEXTS(Enum):
     ATTRIBUTE = 3
     CLASSNAME = 4
 
-finalReport = FinalIdentifierReport()
 contextsDict = {"DECLARATION": CONTEXTS.DECLARATION,
                 "PARAMETER": CONTEXTS.PARAMETER,
                 "FUNCTION": CONTEXTS.FUNCTION,
@@ -60,29 +59,16 @@ inflect = inflect.engine()
 englishDictionary = enchant.Dict("en_US")
 
 def CheckForDictionaryTerms(identifierData):
+    dictionaryMisuses = []
     if len(identifierData['name']) <= 2:
-        finalReport.dictionaryTermUsage = (antiPatternDict["TERM LENGTH"]).format(identifierName=identifierData['name'])
+        dictionaryMisuses.append(antiPatternDict["TERM LENGTH"]).format(identifierName=identifierData['name'])
     #check if all words are dictionary terms
     splitIdentifierData = ronin.split(identifierData['name'])
     for word in splitIdentifierData:
         if not englishDictionary.check(word):
-            finalReport.dictionaryTermUsage = finalReport.dictionaryTermUsage + (antiPatternDict["DICTIONARY TERM"]).format(identifierName=identifierData['name'])
+            dictionaryMisuses.append(antiPatternDict["DICTIONARY TERM"].format(identifierName=identifierData['name']))
 
-    return finalReport
-
-def CheckIfIdentifierHasCollectionType(identifierData):
-    #If the identifier was used with subscript, it's probably a collection
-    if identifierData['array'] == '1':
-        return True
-    
-    #If the identifier is a pointer and has a primitive type, then it is probably a collection (in C/C++)
-    if (identifierData['pointer'] == '1') and (identifierData['type'].lower() in primitiveTypeDict):
-        return True
-    
-    if identifierData['type'] in collectiontypeDict:
-        return True
-    
-    return False
+    return ",".join(dictionaryMisuses) if dictionaryMisuses else None
 
 def CheckHeuristics(identifierData):
     currentIdentifierCharacteristics = NameConventionCharacteristics()
@@ -112,7 +98,21 @@ def CheckHeuristics(identifierData):
     elif any(underscoreUsages) and any(capitalUsages):
         return (antiPatternDict["MIXED STYLES"].format(identifierName=identifierData['name'], heuristics=",".join(reportString)))
     
-    return finalReport
+    return None
+
+def CheckIfIdentifierHasCollectionType(identifierData):
+    #If the identifier was used with subscript, it's probably a collection
+    if identifierData['array'] == '1':
+        return True
+    
+    #If the identifier is a pointer and has a primitive type, then it is probably a collection (in C/C++)
+    if (identifierData['pointer'] == '1') and (identifierData['type'].lower() in primitiveTypeDict):
+        return True
+    
+    if identifierData['type'] in collectiontypeDict:
+        return True
+    
+    return False
 
 def CheckTypeVersusPlurality(identifierData):
     splitIdentifierData = ronin.split(identifierData['name'])
@@ -127,14 +127,11 @@ def CheckTypeVersusPlurality(identifierData):
         shouldIdentifierBePlural = CheckIfIdentifierHasCollectionType(identifierData)
         if shouldIdentifierBePlural != False:
             return antiPatternDict["SINGULAR MISUSE"].format(identifier=identifierData['name'], typename=identifierData['type'])
-    return str()
+    return None
 
 def CheckLocalIdentifier(identifierData):
-    finalReport = CheckHeuristics(identifierData)
-    finalReport = CheckTypeVersusPlurality(identifierData)
-    finalReport = CheckForDictionaryTerms(identifierData)
+    finalReport = FinalIdentifierReport(CheckTypeVersusPlurality(identifierData), CheckHeuristics(identifierData), CheckForDictionaryTerms(identifierData))
     return finalReport
-    #print("{name} in {identifier} is {plurality}".format(name=splitIdentifierData[-1], identifier=splitIdentifierData, plurality=inflect.singular_noun(splitIdentifierData[-1])))
 
 if __name__ == '__main__':
     with open(sys.argv[1]) as identifier_file:
