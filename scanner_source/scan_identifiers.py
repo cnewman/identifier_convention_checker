@@ -43,7 +43,9 @@ antiPatternDict = {
     "DICTIONARY TERM" : "{identifierName} is not a dictionary term.",
     "PLURAL MISUSE" : "Plural identifier {identifier} has a non-collection type {typename}",
     "SINGULAR MISUSE" : "Singular identifier {identifier} has a collection type {typename}",
-    "MIXED STYLES" : "{identifierName} mixes styles, containing {heuristics}. Please follow the style guidelines."
+    "MIXED STYLES" : "{identifierName} mixes styles, containing {heuristics}. Please follow the style guidelines.",
+    "GENERIC TERM SINGLE" : "{identifierName} is a generic term. Please follow the style guidelines.",
+    "GENERIC TERM MULTI" : "{identifierName} contains a generic term. This might be okay, as long as the generic term helps others comprehend this identifier."
 }
 
 primitiveTypeDict = {"int", "char", "long", "float", "double"}
@@ -53,6 +55,18 @@ collectiontypeDict = {"vector", "list", "set", "dictionary", "map"}
 inflect = inflect.engine()
 englishDictionary = enchant.Dict("en_US")
 
+def CheckForGenericTerms(identifierData):
+    genericTermMisuses = []
+    splitIdentifierData = ronin.split(identifierData['name'])
+    if len(splitIdentifierData) == 1:
+        print(splitIdentifierData)
+        if splitIdentifierData[0] in genericTerms:
+            genericTermMisuses.append(antiPatternDict["GENERIC TERM SINGLE"].format(identifierName=identifierData['name']))
+    else:
+        for word in splitIdentifierData:
+            if word in genericTerms:
+                genericTermMisuses.append(antiPatternDict["GENERIC TERM MULTI"].format(identifierName=identifierData['name']))
+    return ",".join(genericTermMisuses) if genericTermMisuses else None
 def CheckForDictionaryTerms(identifierData):
     dictionaryMisuses = []
     if len(identifierData['name']) <= 2:

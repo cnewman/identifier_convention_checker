@@ -1,5 +1,5 @@
 import unittest
-from scanner_source.scan_identifiers import CheckTypeVersusPlurality, CheckHeuristics, CheckForDictionaryTerms
+from scanner_source.scan_identifiers import CheckTypeVersusPlurality, CheckHeuristics, CheckForDictionaryTerms, CheckForGenericTerms
 class NameCheckerTests(unittest.TestCase):
     
     #Plurality tests
@@ -25,9 +25,20 @@ class NameCheckerTests(unittest.TestCase):
     
     #Dictionary term tests
     def test_identifier_with_dictionary_term_misuse(self):
-        identifier_with_mixed_capital_underscore_heuristics = {'type': 'int', 'name': 'tkn','array':0, 'pointer':0}
-        self.assertEqual ('tkn is not a dictionary term.', CheckForDictionaryTerms(identifier_with_mixed_capital_underscore_heuristics))
+        identifier_with_dictionary_term_misuse = {'type': 'int', 'name': 'tkn','array':0, 'pointer':0}
+        self.assertEqual ('tkn is not a dictionary term.', CheckForDictionaryTerms(identifier_with_dictionary_term_misuse))
     def test_identifier_with_good_dictionary_term_usage(self):
-        identifier_with_mixed_capital_underscore_heuristics = {'type': 'int', 'name': 'token','array':0, 'pointer':0}
-        self.assertEqual (None, CheckForDictionaryTerms(identifier_with_mixed_capital_underscore_heuristics))
+        identifier_with_good_dictionary_term_usage = {'type': 'int', 'name': 'token','array':0, 'pointer':0}
+        self.assertEqual (None, CheckForDictionaryTerms(identifier_with_good_dictionary_term_usage))
     
+    #Generic term tests
+    def test_identifier_with_generic_term_misuse(self):
+        identifier_with_generic_term_misuse = {'type': 'int', 'name': 'result','array':0, 'pointer':0}
+        self.assertEqual ('result is a generic term. Please follow the style guidelines.', CheckForGenericTerms(identifier_with_generic_term_misuse))
+    def test_identifier_with_okay_generic_term_usage(self):
+        identifier_with_okay_generic_term_usage = {'type': 'int', 'name': 'startOfWord','array':0, 'pointer':0}
+        self.assertEqual ('startOfWord contains a generic term. This might be okay, as long as the generic term helps others comprehend this identifier.', CheckForGenericTerms(identifier_with_okay_generic_term_usage))
+    def test_identifier_with_no_generic_term_usage(self):
+        identifier_with_no_generic_term_usage = {'type': 'int', 'name': 'employeeName','array':0, 'pointer':0}
+        self.assertEqual (None, CheckForGenericTerms(identifier_with_no_generic_term_usage))
+        
