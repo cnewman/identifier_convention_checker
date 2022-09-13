@@ -3,31 +3,26 @@ from enum import Enum
 from spiral import ronin
 import inflect
 import enchant
+import sys
 
 class FinalIdentifierReport:
     def __init__(self, plurality, heuristics, dictionary):
         self.pluralityUsage = plurality
         self.heuristicsUsage = heuristics
         self.dictionaryTermUsage = dictionary
-    def setPluralityMessage():
-        pass
-    def setHeuristicsMessage():
-        pass
     def __str__(self):
-        finalReportString = str()
-        for infoString in [self.pluralityUsage, self.heuristicsUsage, self.dictionaryTermUsage]:
-            if infoString:
-                finalReportString = finalReportString + infoString
-        return finalReportString
-
-class NameConventionCharacteristics:
-    def __init__(self):
-        self.name = str()
-        self.usesCamelCase = False
-        self.usesUnderscore = False
-        self.usesAllCapitals = False
-        self.usesAllLowercase = False
-        self.usesMixedStyles = False
+        formatted = "{}\n{}\n{}\n".format(str() if self.pluralityUsage is None else self.pluralityUsage, 
+                     str() if self.heuristicsUsage is None else self.heuristicsUsage, 
+                     str() if self.dictionaryTermUsage is None else self.dictionaryTermUsage)
+        
+        #The blank strs will cause newlines to appear. Need to strip those.
+        cleanReport = []
+        for line in formatted.split('\n'):
+            #are any characters NOT a newline??? keep
+            if any([c.isalnum() for c in line.split()]):
+                cleanReport.append(line+'\n')
+        
+        return ''.join(cleanReport)
 
 class CONTEXTS(Enum):
     DECLARATION = 0
@@ -71,8 +66,6 @@ def CheckForDictionaryTerms(identifierData):
     return ",".join(dictionaryMisuses) if dictionaryMisuses else None
 
 def CheckHeuristics(identifierData):
-    currentIdentifierCharacteristics = NameConventionCharacteristics()
-    
     underscoreUsages = []
     capitalUsages = []
     lowercaseUsages = []
@@ -140,4 +133,4 @@ if __name__ == '__main__':
             if contextsDict.get(row['context']) == CONTEXTS.DECLARATION:
                 identifierAppraisal = CheckLocalIdentifier(row)
                 if identifierAppraisal != None:
-                    print(identifierAppraisal)
+                    sys.stdout.write(str(identifierAppraisal))
