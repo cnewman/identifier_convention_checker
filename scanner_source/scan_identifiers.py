@@ -45,7 +45,8 @@ antiPatternDict = {
     "SINGULAR MISUSE" : "Singular identifier {identifier} has a collection type {typename}",
     "MIXED STYLES" : "{identifierName} mixes styles, containing {heuristics}. Please follow the style guidelines.",
     "GENERIC TERM SINGLE" : "{identifierName} is a generic term. Please follow the style guidelines.",
-    "GENERIC TERM MULTI" : "{identifierName} contains a generic term. This might be okay, as long as the generic term helps others comprehend this identifier."
+    "GENERIC TERM MULTI" : "{identifierName} contains a generic term. This might be okay, as long as the generic term helps others comprehend this identifier.",
+    "TYPE NAME MATCH" : "{identifierName} has the same name as its type, {typename}. Generally, an identifier's name should *not* match its type.",
 }
 
 primitiveTypeDict = {"int", "char", "long", "float", "double"}
@@ -59,7 +60,6 @@ def CheckForGenericTerms(identifierData):
     genericTermMisuses = []
     splitIdentifierData = ronin.split(identifierData['name'])
     if len(splitIdentifierData) == 1:
-        print(splitIdentifierData)
         if splitIdentifierData[0] in genericTerms:
             genericTermMisuses.append(antiPatternDict["GENERIC TERM SINGLE"].format(identifierName=identifierData['name']))
     else:
@@ -67,6 +67,7 @@ def CheckForGenericTerms(identifierData):
             if word in genericTerms:
                 genericTermMisuses.append(antiPatternDict["GENERIC TERM MULTI"].format(identifierName=identifierData['name']))
     return ",".join(genericTermMisuses) if genericTermMisuses else None
+
 def CheckForDictionaryTerms(identifierData):
     dictionaryMisuses = []
     if len(identifierData['name']) <= 2:
@@ -135,6 +136,16 @@ def CheckTypeVersusPlurality(identifierData):
         if shouldIdentifierBePlural != False:
             return antiPatternDict["SINGULAR MISUSE"].format(identifier=identifierData['name'], typename=identifierData['type'])
     return None
+
+def CheckIfIdentifierAndTypeNamesMatch(identifierData):
+    identifierName = identifierData['name'].lower()
+    identifierType = identifierData['type'].lower()
+
+    if identifierName == identifierType:
+        return antiPatternDict["TYPE NAME MATCH"].format(identifierName=identifierData['name'], typename=identifierData['type'])
+    
+    return None
+
 
 def CheckLocalIdentifier(identifierData):
     finalReport = FinalIdentifierReport(CheckTypeVersusPlurality(identifierData), CheckHeuristics(identifierData), CheckForDictionaryTerms(identifierData))

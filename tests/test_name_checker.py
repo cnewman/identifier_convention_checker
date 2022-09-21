@@ -1,11 +1,10 @@
 import unittest
-from scanner_source.scan_identifiers import CheckTypeVersusPlurality, CheckHeuristics, CheckForDictionaryTerms, CheckForGenericTerms
+from scanner_source.scan_identifiers import CheckTypeVersusPlurality, CheckHeuristics, CheckForDictionaryTerms, CheckForGenericTerms, CheckIfIdentifierAndTypeNamesMatch
 class NameCheckerTests(unittest.TestCase):
     
     #Plurality tests
     def test_identifier_with_no_plural_collection_problems(self):
         identifier_with_no_plurality_problems = {'type': 'vector', 'name': 'names','array':0, 'pointer':0}
-        print(CheckTypeVersusPlurality(identifier_with_no_plurality_problems))
         self.assertEqual(None, CheckTypeVersusPlurality(identifier_with_no_plurality_problems))
     def test_plural_identifier_without_collection_type(self):
         plural_identifier_no_collection = {'type': 'int', 'name': 'tokens','array':0, 'pointer':0}
@@ -41,4 +40,11 @@ class NameCheckerTests(unittest.TestCase):
     def test_identifier_with_no_generic_term_usage(self):
         identifier_with_no_generic_term_usage = {'type': 'int', 'name': 'employeeName','array':0, 'pointer':0}
         self.assertEqual (None, CheckForGenericTerms(identifier_with_no_generic_term_usage))
-        
+    
+    #Type and Name Match Tests
+    def test_identifier_and_type_names_match(self):
+        identifier_with_matching_type_name = {'type': 'ListPointer', 'name': 'listPointer','array':0, 'pointer':0}
+        self.assertEqual ("listPointer has the same name as its type, ListPointer. Generally, an identifier's name should *not* match its type.", CheckIfIdentifierAndTypeNamesMatch(identifier_with_matching_type_name))
+    def test_identifier_and_type_names_do_not_match(self):
+        identifier_with_matching_type_name = {'type': 'ListPointer', 'name': 'employeeMames','array':0, 'pointer':0}
+        self.assertEqual (None, CheckIfIdentifierAndTypeNamesMatch(identifier_with_matching_type_name))
