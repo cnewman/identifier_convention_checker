@@ -1,5 +1,7 @@
 import unittest
 from scanner_source.scan_identifiers import CheckTypeVersusPlurality, CheckHeuristics, CheckForDictionaryTerms, CheckForGenericTerms, CheckIfIdentifierAndTypeNamesMatch
+from colorama import init
+from strip_ansi import strip_ansi
 class NameCheckerTests(unittest.TestCase):
     
     #Plurality tests
@@ -8,16 +10,16 @@ class NameCheckerTests(unittest.TestCase):
         self.assertEqual(None, CheckTypeVersusPlurality(identifier_with_no_plurality_problems))
     def test_plural_identifier_without_collection_type(self):
         plural_identifier_no_collection = {'type': 'int', 'name': 'tokens','array':0, 'pointer':0}
-        self.assertEqual("Plural identifier tokens has a non-collection type int", CheckTypeVersusPlurality(plural_identifier_no_collection))
+        self.assertEqual("Plural identifier tokens has a non-collection type int", strip_ansi(CheckTypeVersusPlurality(plural_identifier_no_collection)))
     def test_singular_identifier_with_collection_type(self):
         singular_identifier_with_collection = {'type': 'vector', 'name': 'token', 'array':0, 'pointer':0}
-        self.assertEqual("Singular identifier token has a collection type vector", CheckTypeVersusPlurality(singular_identifier_with_collection))
+        self.assertEqual("Singular identifier token has a collection type vector", strip_ansi(CheckTypeVersusPlurality(singular_identifier_with_collection)))
     
     #Heuristics tests
     def test_mixed_heuristics_capital_underscore(self):
         identifier_with_mixed_capital_underscore_heuristics = {'type': 'int', 'name': 'tokenMax_count','array':0, 'pointer':0}
         self.assertEqual("tokenMax_count mixes styles, containing underscores,upper case letters. Please follow the style guidelines.", 
-                         CheckHeuristics(identifier_with_mixed_capital_underscore_heuristics)) 
+                         strip_ansi(CheckHeuristics(identifier_with_mixed_capital_underscore_heuristics)) )
     def test_consistent_heuristics(self):
         identifier_with_mixed_capital_underscore_heuristics = {'type': 'int', 'name': 'Token','array':0, 'pointer':0}
         self.assertEqual (None, CheckHeuristics(identifier_with_mixed_capital_underscore_heuristics))
@@ -25,7 +27,7 @@ class NameCheckerTests(unittest.TestCase):
     #Dictionary term tests
     def test_identifier_with_dictionary_term_misuse(self):
         identifier_with_dictionary_term_misuse = {'type': 'int', 'name': 'tkn','array':0, 'pointer':0}
-        self.assertEqual ('tkn is not a dictionary term.', CheckForDictionaryTerms(identifier_with_dictionary_term_misuse))
+        self.assertEqual ('tkn is not a dictionary term.', strip_ansi(CheckForDictionaryTerms(identifier_with_dictionary_term_misuse)))
     def test_identifier_with_good_dictionary_term_usage(self):
         identifier_with_good_dictionary_term_usage = {'type': 'int', 'name': 'token','array':0, 'pointer':0}
         self.assertEqual (None, CheckForDictionaryTerms(identifier_with_good_dictionary_term_usage))
@@ -33,10 +35,10 @@ class NameCheckerTests(unittest.TestCase):
     #Generic term tests
     def test_identifier_with_generic_term_misuse(self):
         identifier_with_generic_term_misuse = {'type': 'int', 'name': 'result','array':0, 'pointer':0}
-        self.assertEqual ('result is a generic term. Please follow the style guidelines.', CheckForGenericTerms(identifier_with_generic_term_misuse))
+        self.assertEqual ('result is a generic term. Please follow the style guidelines.', strip_ansi(CheckForGenericTerms(identifier_with_generic_term_misuse)))
     def test_identifier_with_okay_generic_term_usage(self):
         identifier_with_okay_generic_term_usage = {'type': 'int', 'name': 'startOfWord','array':0, 'pointer':0}
-        self.assertEqual ('startOfWord contains a generic term. This might be okay, as long as the generic term helps others comprehend this identifier.', CheckForGenericTerms(identifier_with_okay_generic_term_usage))
+        self.assertEqual ('startOfWord contains a generic term. This might be okay, as long as the generic term helps others comprehend this identifier.', strip_ansi(CheckForGenericTerms(identifier_with_okay_generic_term_usage)))
     def test_identifier_with_no_generic_term_usage(self):
         identifier_with_no_generic_term_usage = {'type': 'int', 'name': 'employeeName','array':0, 'pointer':0}
         self.assertEqual (None, CheckForGenericTerms(identifier_with_no_generic_term_usage))
@@ -44,7 +46,7 @@ class NameCheckerTests(unittest.TestCase):
     #Type and Name Match Tests
     def test_identifier_and_type_names_match(self):
         identifier_with_matching_type_name = {'type': 'ListPointer', 'name': 'listPointer','array':0, 'pointer':0}
-        self.assertEqual ("listPointer has the same name as its type, ListPointer. Generally, an identifier's name should *not* match its type.", CheckIfIdentifierAndTypeNamesMatch(identifier_with_matching_type_name))
+        self.assertEqual ("listPointer has the same name as its type, ListPointer. Generally, an identifier's name should *not* match its type.", strip_ansi(CheckIfIdentifierAndTypeNamesMatch(identifier_with_matching_type_name)))
     def test_identifier_and_type_names_do_not_match(self):
         identifier_with_matching_type_name = {'type': 'ListPointer', 'name': 'employeeMames','array':0, 'pointer':0}
         self.assertEqual (None, CheckIfIdentifierAndTypeNamesMatch(identifier_with_matching_type_name))

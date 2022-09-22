@@ -1,6 +1,7 @@
 import csv, sys
 from enum import Enum
 from spiral import ronin
+from colorama import Fore, Style, init
 import inflect
 import enchant
 import sys
@@ -41,8 +42,8 @@ antiPatternDict = {
     "TERM LENGTH" : "{identifierName} has less than 3 characters in it. Typically, identifiers should be made up of dictionary terms."
                                     "Please follow the style guidelines.",
     "DICTIONARY TERM" : "{identifierName} is not a dictionary term.",
-    "PLURAL MISUSE" : "Plural identifier {identifier} has a non-collection type {typename}",
-    "SINGULAR MISUSE" : "Singular identifier {identifier} has a collection type {typename}",
+    "PLURAL MISUSE" : "Plural identifier {identifierName} has a non-collection type {typename}",
+    "SINGULAR MISUSE" : "Singular identifier {identifierName} has a collection type {typename}",
     "MIXED STYLES" : "{identifierName} mixes styles, containing {heuristics}. Please follow the style guidelines.",
     "GENERIC TERM SINGLE" : "{identifierName} is a generic term. Please follow the style guidelines.",
     "GENERIC TERM MULTI" : "{identifierName} contains a generic term. This might be okay, as long as the generic term helps others comprehend this identifier.",
@@ -56,27 +57,34 @@ collectiontypeDict = {"vector", "list", "set", "dictionary", "map"}
 inflect = inflect.engine()
 englishDictionary = enchant.Dict("en_US")
 
+def WrapTextWithColor(text, color):
+    return color + text + Style.RESET_ALL
+
 def CheckForGenericTerms(identifierData):
     genericTermMisuses = []
     splitIdentifierData = ronin.split(identifierData['name'])
     if len(splitIdentifierData) == 1:
         if splitIdentifierData[0] in genericTerms:
-            genericTermMisuses.append(antiPatternDict["GENERIC TERM SINGLE"].format(identifierName=identifierData['name']))
+            genericTermMisuses.append(antiPatternDict["GENERIC TERM SINGLE"]
+                                     .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED)))
     else:
         for word in splitIdentifierData:
             if word in genericTerms:
-                genericTermMisuses.append(antiPatternDict["GENERIC TERM MULTI"].format(identifierName=identifierData['name']))
+                genericTermMisuses.append(antiPatternDict["GENERIC TERM MULTI"]
+                                         .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED)))
     return ",".join(genericTermMisuses) if genericTermMisuses else None
 
 def CheckForDictionaryTerms(identifierData):
     dictionaryMisuses = []
     if len(identifierData['name']) <= 2:
-        dictionaryMisuses.append(antiPatternDict["TERM LENGTH"]).format(identifierName=identifierData['name'])
+        dictionaryMisuses.append(antiPatternDict["TERM LENGTH"]
+                                .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED)))
     #check if all words are dictionary terms
     splitIdentifierData = ronin.split(identifierData['name'])
     for word in splitIdentifierData:
         if not englishDictionary.check(word):
-            dictionaryMisuses.append(antiPatternDict["DICTIONARY TERM"].format(identifierName=identifierData['name']))
+            dictionaryMisuses.append(antiPatternDict["DICTIONARY TERM"]
+                                    .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED)))
 
     return ",".join(dictionaryMisuses) if dictionaryMisuses else None
 
@@ -95,16 +103,18 @@ def CheckHeuristics(identifierData):
     
     reportString = []
     if any(underscoreUsages):
-        reportString.append("underscores")
+        reportString.append(WrapTextWithColor("underscores", Fore.MAGENTA))
     if any(capitalUsages):
-        reportString.append("upper case letters")
+        reportString.append(WrapTextWithColor("upper case letters", Fore.MAGENTA))
     if not all(lowercaseUsages):
-        reportString.append("lower case letters")
+        reportString.append(WrapTextWithColor("lower case letters", Fore.MAGENTA))
     
     if len(reportString) == 3:
-        return (antiPatternDict["MIXED STYLES"].format(identifierName=identifierData['name'], heuristics=",".join(reportString)))
+        return (antiPatternDict["MIXED STYLES"]
+               .format(identifierName=WrapTextWithColor(identifierData['name'],Fore.RED), heuristics=",".join(reportString)))
     elif any(underscoreUsages) and any(capitalUsages):
-        return (antiPatternDict["MIXED STYLES"].format(identifierName=identifierData['name'], heuristics=",".join(reportString)))
+        return (antiPatternDict["MIXED STYLES"]
+               .format(identifierName=WrapTextWithColor(identifierData['name'],Fore.RED), heuristics=",".join(reportString)))
     
     return None
 
@@ -130,11 +140,15 @@ def CheckTypeVersusPlurality(identifierData):
     if(isItPlural != False): #Inflect is telling us that this word is plural.
         shouldIdentifierBePlural = CheckIfIdentifierHasCollectionType(identifierData)
         if shouldIdentifierBePlural != True:
-            return antiPatternDict["PLURAL MISUSE"].format(identifier=identifierData['name'], typename=identifierData['type'])
+            return (antiPatternDict["PLURAL MISUSE"]
+                  .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED), 
+                          typename=WrapTextWithColor(identifierData['type'], Fore.BLUE)))
     else: #Inflect is telling us that this word is singular.
         shouldIdentifierBePlural = CheckIfIdentifierHasCollectionType(identifierData)
         if shouldIdentifierBePlural != False:
-            return antiPatternDict["SINGULAR MISUSE"].format(identifier=identifierData['name'], typename=identifierData['type'])
+            return (antiPatternDict["SINGULAR MISUSE"]
+                  .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED),
+                          typename=WrapTextWithColor(identifierData['type'], Fore.BLUE)))
     return None
 
 def CheckIfIdentifierAndTypeNamesMatch(identifierData):

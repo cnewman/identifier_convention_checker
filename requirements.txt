@@ -1,2 +1,4 @@
 inflect
 pyenchant
+colorama
+strip_ansi
