@@ -6,25 +6,6 @@ import inflect
 import enchant
 import sys
 
-class FinalIdentifierReport:
-    def __init__(self, plurality, heuristics, dictionary):
-        self.pluralityUsage = plurality
-        self.heuristicsUsage = heuristics
-        self.dictionaryTermUsage = dictionary
-    def __str__(self):
-        formatted = "{}\n{}\n{}\n".format(str() if self.pluralityUsage is None else self.pluralityUsage, 
-                     str() if self.heuristicsUsage is None else self.heuristicsUsage, 
-                     str() if self.dictionaryTermUsage is None else self.dictionaryTermUsage)
-        
-        #The blank strs will cause newlines to appear. Need to strip those.
-        cleanReport = []
-        for line in formatted.split('\n'):
-            #are any characters NOT a newline??? keep
-            if any([c.isalnum() for c in line.split()]):
-                cleanReport.append(line+'\n')
-        
-        return ''.join(cleanReport)
-
 class CONTEXTS(Enum):
     DECLARATION = 0
     PARAMETER = 1
@@ -57,6 +38,24 @@ collectiontypeDict = {"vector", "list", "set", "dictionary", "map"}
 inflect = inflect.engine()
 englishDictionary = enchant.Dict("en_US")
 
+class FinalIdentifierReport:
+    def __init__(self, plurality, heuristics, dictionary):
+        self.pluralityUsage = plurality
+        self.heuristicsUsage = heuristics
+        self.dictionaryTermUsage = dictionary
+    def __str__(self):
+        formatted = "{}\n{}\n{}\n".format(str() if self.pluralityUsage is None else self.pluralityUsage, 
+                     str() if self.heuristicsUsage is None else self.heuristicsUsage, 
+                     str() if self.dictionaryTermUsage is None else self.dictionaryTermUsage)
+        
+        #The blank strs will cause newlines to appear. Need to strip those.
+        cleanReport = []
+        for line in formatted.split('\n'):
+            #are any characters NOT a newline??? keep
+            if any([c.isalnum() for c in line.split()]):
+                cleanReport.append(line+'\n')
+        
+        return ''.join(cleanReport)
 def WrapTextWithColor(text, color):
     return color + text + Style.RESET_ALL
 
@@ -164,12 +163,3 @@ def CheckIfIdentifierAndTypeNamesMatch(identifierData):
 def CheckLocalIdentifier(identifierData):
     finalReport = FinalIdentifierReport(CheckTypeVersusPlurality(identifierData), CheckHeuristics(identifierData), CheckForDictionaryTerms(identifierData))
     return finalReport
-
-if __name__ == '__main__':
-    with open(sys.argv[1]) as identifier_file:
-        identifier_csv_reader = csv.DictReader(identifier_file)
-        for row in identifier_csv_reader:
-            if contextsDict.get(row['context']) == CONTEXTS.DECLARATION:
-                identifierAppraisal = CheckLocalIdentifier(row)
-                if identifierAppraisal != None:
-                    sys.stdout.write(str(identifierAppraisal))
