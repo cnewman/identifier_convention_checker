@@ -32,7 +32,9 @@ antiPatternDict = {
 }
 
 primitiveTypeDict = {"int", "char", "long", "float", "double"}
-genericTerms = {"value", "result", "pointer", "output", "input", "content", "ptr", "in", "out", "val", "res", "begin", "end", "start", "finish", "tok", "token"}
+genericTerms = {"value", "result", "pointer", "output", "input", "content", "ptr",
+                "in", "out", "val", "res", "begin", "end", "start", "finish", "tok",
+                "test", "token", "temp"}
 collectiontypeDict = {"vector", "list", "set", "dictionary", "map"}
 
 inflect = inflect.engine()
@@ -136,15 +138,15 @@ def CheckTypeVersusPlurality(identifierData):
     # First a check to see if identifier name plurality matches its type. If it is a plural identifier,
     # But its type doesn't look like a collection, then this is a linguistic anti-pattern
     isItPlural = inflect.singular_noun(splitIdentifierData[-1])
-    if(isItPlural != False): #Inflect is telling us that this word is plural.
+    if(isItPlural): #Inflect is telling us that this word is plural.
         shouldIdentifierBePlural = CheckIfIdentifierHasCollectionType(identifierData)
-        if shouldIdentifierBePlural != True:
+        if not shouldIdentifierBePlural:
             return (antiPatternDict["PLURAL MISUSE"]
                   .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED), 
                           typename=WrapTextWithColor(identifierData['type'], Fore.BLUE)))
     else: #Inflect is telling us that this word is singular.
         shouldIdentifierBePlural = CheckIfIdentifierHasCollectionType(identifierData)
-        if shouldIdentifierBePlural != False:
+        if shouldIdentifierBePlural:
             return (antiPatternDict["SINGULAR MISUSE"]
                   .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED),
                           typename=WrapTextWithColor(identifierData['type'], Fore.BLUE)))

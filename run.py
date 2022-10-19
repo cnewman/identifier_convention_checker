@@ -12,7 +12,6 @@ if __name__ == '__main__':
     identifier_csv_reader = csv.DictReader(extract_identifiers_process_out[0].decode('utf-8').strip().splitlines())
     
     for row in identifier_csv_reader:
-        if identifier_analysis.contextsDict.get(row['context']) == identifier_analysis.CONTEXTS.DECLARATION:
-            identifierAppraisal = identifier_analysis.CheckLocalIdentifier(row)
-            if identifierAppraisal != None:
-                sys.stdout.write(str(identifierAppraisal))
+        identifierAppraisal = identifier_analysis.CheckLocalIdentifier(row)
+        if identifierAppraisal != None:
+            sys.stdout.write(str(identifierAppraisal))
