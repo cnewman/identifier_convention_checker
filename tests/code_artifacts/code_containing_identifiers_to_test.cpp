@@ -24,8 +24,15 @@ int functionWithConsistentCamelCaseHeuristics(){
 void functionWithSingularPluralIssues(){
 	std::vector<std::string> token;
 	int tokens;
+	
 	std::vector<std::string> names;
 	int name;
+
+	int* id;
+	int code[10];
+
+	int* ids;
+	int codes[10];
 }
 
 void functionWithDictionaryTermIssues(){

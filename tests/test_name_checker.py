@@ -14,7 +14,13 @@ class NameCheckerTests(unittest.TestCase):
     def test_singular_identifier_with_collection_type(self):
         singular_identifier_with_collection = {'type': 'vector', 'name': 'token', 'array':0, 'pointer':0}
         self.assertEqual("Singular identifier token has a collection type vector", strip_ansi(CheckTypeVersusPlurality(singular_identifier_with_collection)))
-    
+    def test_singular_identifier_with_pointer_collection_type(self):
+        singular_identifier_with_pointer_collection = {'type': 'int*', 'name': 'token', 'array':0, 'pointer':1}
+        self.assertEqual("Singular identifier token has a collection type int*", strip_ansi(CheckTypeVersusPlurality(singular_identifier_with_pointer_collection)))
+    def test_singular_identifier_with_array_collection_type(self):
+        singular_identifier_with_array_collection = {'type': 'int', 'name': 'token[]', 'array':1, 'pointer':0}
+        self.assertEqual("Singular identifier token[] has a collection type int", strip_ansi(CheckTypeVersusPlurality(singular_identifier_with_array_collection)))
+
     #Heuristics tests
     def test_mixed_heuristics_capital_underscore(self):
         identifier_with_mixed_capital_underscore_heuristics = {'type': 'int', 'name': 'tokenMax_count','array':0, 'pointer':0}

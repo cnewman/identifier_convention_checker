@@ -31,7 +31,7 @@ antiPatternDict = {
     "TYPE NAME MATCH" : "{identifierName} has the same name as its type, {typename}. Generally, an identifier's name should *not* match its type.",
 }
 
-primitiveTypeDict = {"int", "char", "long", "float", "double"}
+primitiveTypeList = ["int", "char", "long", "float", "double", "bool"]
 genericTerms = {"value", "result", "pointer", "output", "input", "content", "ptr",
                 "in", "out", "val", "res", "begin", "end", "start", "finish", "tok",
                 "test", "token", "temp"}
@@ -121,11 +121,12 @@ def CheckHeuristics(identifierData):
 
 def CheckIfIdentifierHasCollectionType(identifierData):
     #If the identifier was used with subscript, it's probably a collection
-    if identifierData['array'] == '1':
+    if identifierData['array'] == 1:
         return True
     
     #If the identifier is a pointer and has a primitive type, then it is probably a collection (in C/C++)
-    if (identifierData['pointer'] == '1') and (identifierData['type'].lower() in primitiveTypeDict):
+    isTypePrimitive = any(identifierData['type'].strip('[]*').lower() in typename for typename in primitiveTypeList)
+    if (identifierData['pointer'] == 1) and isTypePrimitive:
         return True
     
     if identifierData['type'] in collectiontypeDict:

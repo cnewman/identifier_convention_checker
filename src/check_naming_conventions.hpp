@@ -45,7 +45,8 @@ class CheckNamingConventionsPolicy : public srcSAXEventDispatch::EventListener, 
                 declarationData = *policy->Data<DeclData>();
                 if(!(declarationData.nameOfIdentifier.empty()||declarationData.nameOfType.empty())){
                     if(ctx.IsOpen(ParserState::function)){
-
+                        if(declarationData.isPointer) declarationData.nameOfType += "*";
+                        if(declarationData.usesSubscript) declarationData.nameOfType += "[]";
                         CollectIdentifierTypeNameAndContext(declarationData.nameOfType, declarationData.nameOfIdentifier, "DECLARATION", ctx.currentLineNumber, 
                                                             ctx.currentFilePath, ctx.currentFileLanguage, declarationData.isPointer, declarationData.usesSubscript);
 
