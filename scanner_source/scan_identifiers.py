@@ -123,6 +123,10 @@ def CheckIfIdentifierHasCollectionType(identifierData):
     return False
 
 def CheckTypeVersusPlurality(identifierData):
+    #plural rules don't apply to function names
+    if identifierData['context'] == 'FUNCTION':
+        return None
+    
     splitIdentifierData = ronin.split(identifierData['name'])
     # First a check to see if identifier name plurality matches its type. If it is a plural identifier,
     # But its type doesn't look like a collection, then this is a linguistic anti-pattern
