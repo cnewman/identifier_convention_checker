@@ -6,19 +6,6 @@ import inflect
 import enchant
 import sys
 
-class CONTEXTS(Enum):
-    DECLARATION = 0
-    PARAMETER = 1
-    FUNCTION = 2
-    ATTRIBUTE = 3
-    CLASSNAME = 4
-
-contextsDict = {"DECLARATION": CONTEXTS.DECLARATION,
-                "PARAMETER": CONTEXTS.PARAMETER,
-                "FUNCTION": CONTEXTS.FUNCTION,
-                "ATTRIBUTE": CONTEXTS.ATTRIBUTE,
-                "CLASSNAME": CONTEXTS.CLASSNAME}
-
 antiPatternDict = {
     "TERM LENGTH" : "{identifierName} has less than 3 characters in it. Typically, identifiers should be made up of dictionary terms."
                                     "Please follow the style guidelines.",
@@ -35,7 +22,7 @@ primitiveTypeList = ["int", "char", "long", "float", "double", "bool"]
 genericTerms = {"value", "result", "pointer", "output", "input", "content", "ptr",
                 "in", "out", "val", "res", "begin", "end", "start", "finish", "tok",
                 "test", "token", "temp"}
-collectiontypeDict = {"vector", "list", "set", "dictionary", "map"}
+collectiontypeDict = ["vector", "list", "set", "dictionary", "map", "deque", "stack", "queue", "array"]
 
 inflect = inflect.engine()
 englishDictionary = enchant.Dict("en_US")
@@ -129,7 +116,8 @@ def CheckIfIdentifierHasCollectionType(identifierData):
     if (identifierData['pointer'] == 1) and isTypePrimitive:
         return True
     
-    if identifierData['type'] in collectiontypeDict:
+    isTypeCollection = any(identifierData['type'].strip('[]*').lower() in typename for typename in collectiontypeDict)
+    if isTypeCollection:
         return True
     
     return False

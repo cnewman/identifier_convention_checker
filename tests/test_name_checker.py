@@ -18,8 +18,8 @@ class NameCheckerTests(unittest.TestCase):
         singular_identifier_with_pointer_collection = {'type': 'int*', 'name': 'token', 'array':0, 'pointer':1}
         self.assertEqual("Singular identifier token has a collection type int*", strip_ansi(CheckTypeVersusPlurality(singular_identifier_with_pointer_collection)))
     def test_singular_identifier_with_array_collection_type(self):
-        singular_identifier_with_array_collection = {'type': 'int', 'name': 'token[]', 'array':1, 'pointer':0}
-        self.assertEqual("Singular identifier token[] has a collection type int", strip_ansi(CheckTypeVersusPlurality(singular_identifier_with_array_collection)))
+        singular_identifier_with_array_collection = {'type': 'unsigned short int', 'name': 'token[]', 'array':1, 'pointer':0}
+        self.assertEqual("Singular identifier token[] has a collection type unsigned short int", strip_ansi(CheckTypeVersusPlurality(singular_identifier_with_array_collection)))
 
     #Heuristics tests
     def test_mixed_heuristics_capital_underscore(self):
