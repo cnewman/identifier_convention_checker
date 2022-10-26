@@ -7,15 +7,14 @@ import enchant
 import sys
 
 antiPatternDict = {
-    "TERM LENGTH" : "{identifierName} has less than 3 characters in it. Typically, identifiers should be made up of dictionary terms."
-                                    "Please follow the style guidelines.",
-    "DICTIONARY TERM" : "{identifierName} is not a dictionary term.",
+    "TERM LENGTH" : "{identifierName} has less than 3 characters in it. Typically, identifiers should be made up of dictionary terms",
+    "DICTIONARY TERM" : "{identifierName} is not a dictionary term",
     "PLURAL MISUSE" : "Plural identifier {identifierName} has a non-collection type {typename}",
     "SINGULAR MISUSE" : "Singular identifier {identifierName} has a collection type {typename}",
-    "MIXED STYLES" : "{identifierName} mixes styles, containing {heuristics}. Please follow the style guidelines.",
-    "GENERIC TERM SINGLE" : "{identifierName} is a generic term. Please follow the style guidelines.",
-    "GENERIC TERM MULTI" : "{identifierName} contains a generic term. This might be okay, as long as the generic term helps others comprehend this identifier.",
-    "TYPE NAME MATCH" : "{identifierName} has the same name as its type, {typename}. Generally, an identifier's name should *not* match its type.",
+    "MIXED STYLES" : "{identifierName} mixes styles, containing {heuristics}",
+    "GENERIC TERM SINGLE" : "{identifierName} is a generic term",
+    "GENERIC TERM MULTI" : "{identifierName} contains a generic term. This might be okay, as long as the generic term helps others comprehend this identifier",
+    "TYPE NAME MATCH" : "{identifierName} has the same name as its type, {typename}. Generally, an identifier's name should *not* match its type",
 }
 
 primitiveTypeList = ["int", "char", "long", "float", "double", "bool"]
@@ -51,7 +50,8 @@ def WrapTextWithColor(text, color):
 def CheckForGenericTerms(identifierData):
     genericTermMisuses = []
     splitIdentifierData = ronin.split(identifierData['name'])
-    if len(splitIdentifierData) == 1:
+    IDENTIFIER_OF_LENGTH_ONE = 1
+    if len(splitIdentifierData) == IDENTIFIER_OF_LENGTH_ONE:
         if splitIdentifierData[0] in genericTerms:
             genericTermMisuses.append(antiPatternDict["GENERIC TERM SINGLE"]
                                      .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED)))
@@ -64,7 +64,8 @@ def CheckForGenericTerms(identifierData):
 
 def CheckForDictionaryTerms(identifierData):
     dictionaryMisuses = []
-    if len(identifierData['name']) <= 2:
+    IDENTIFIER_WITH_TWO_CHARACTERS = 2
+    if len(identifierData['name']) <= IDENTIFIER_WITH_TWO_CHARACTERS:
         dictionaryMisuses.append(antiPatternDict["TERM LENGTH"]
                                 .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED)))
     #check if all words are dictionary terms
@@ -108,12 +109,12 @@ def CheckHeuristics(identifierData):
 
 def CheckIfIdentifierHasCollectionType(identifierData):
     #If the identifier was used with subscript, it's probably a collection
-    if identifierData['array'] == 1:
+    if identifierData['array']:
         return True
     
     #If the identifier is a pointer and has a primitive type, then it is probably a collection (in C/C++)
     isTypePrimitive = any(identifierData['type'].strip('[]*').lower() in typename for typename in primitiveTypeList)
-    if (identifierData['pointer'] == 1) and isTypePrimitive:
+    if identifierData['pointer'] and isTypePrimitive:
         return True
     
     isTypeCollection = any(identifierData['type'].strip('[]*').lower() in typename for typename in collectiontypeDict)
@@ -131,7 +132,7 @@ def CheckTypeVersusPlurality(identifierData):
     # First a check to see if identifier name plurality matches its type. If it is a plural identifier,
     # But its type doesn't look like a collection, then this is a linguistic anti-pattern
     isItPlural = inflect.singular_noun(splitIdentifierData[-1])
-    if(isItPlural): #Inflect is telling us that this word is plural.
+    if isItPlural: #Inflect is telling us that this word is plural.
         shouldIdentifierBePlural = CheckIfIdentifierHasCollectionType(identifierData)
         if not shouldIdentifierBePlural:
             return (antiPatternDict["PLURAL MISUSE"]
