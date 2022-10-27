@@ -61,7 +61,8 @@ class CheckNamingConventionsPolicy : public srcSAXEventDispatch::EventListener, 
             }else if(typeid(ParamTypePolicy) == typeid(*policy)){
                 parameterData = *policy->Data<DeclData>();
                 if(!(parameterData.nameOfIdentifier.empty() || parameterData.nameOfType.empty())){
-
+                    if(parameterData.isPointer) parameterData.nameOfType += "*";
+                    if(parameterData.usesSubscript) parameterData.nameOfType += "[]";
                     CollectIdentifierTypeNameAndContext(parameterData.nameOfType, parameterData.nameOfIdentifier, "PARAMETER", ctx.currentLineNumber, 
                                                         ctx.currentFilePath, ctx.currentFileLanguage, parameterData.isPointer, parameterData.usesSubscript);
 
