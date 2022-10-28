@@ -132,7 +132,7 @@ class CheckNamingConventionsPolicy : public srcSAXEventDispatch::EventListener, 
                 ctx.dispatcher->RemoveListenerDispatch(&paramPolicy);
             };
             closeEventMap[ParserState::archive] = [this](srcSAXEventContext& ctx) {
-                std::cout<<"type,"<<"name,"<<"context,"<<"line,"<<"filename,"<<"language,"<<"pointer,"<<"array,"<<std::endl;
+                std::cout<<"type,"<<"name,"<<"context,"<<"language,"<<"line,"<<"filename,"<<"pointer,"<<"array,"<<std::endl;
                 for(auto identifier : allSystemIdentifiers){
                     std::cout<<identifier<<std::endl;
                 }
