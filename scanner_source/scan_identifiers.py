@@ -1,85 +1,166 @@
 import csv, sys
+import inflect as inflectLib
+import enchant
 from enum import Enum
 from spiral import ronin
 from colorama import Fore, Style, init
-import inflect
-import enchant
+from scanner_source.code_antipatterns import antiPatternTypes
 
-antiPatternDict = {
-    "TERM LENGTH" : "{identifierName} has less than 3 characters in it. Typically, identifiers should be made up of dictionary terms",
-    "DICTIONARY TERM" : "{identifierName} is not a dictionary term",
-    "PLURAL MISUSE" : "Plural identifier {identifierName} has a non-collection type {typename}",
-    "SINGULAR MISUSE" : "Singular identifier {identifierName} has a collection type {typename}",
-    "MIXED STYLES" : "{identifierName} mixes styles, containing {heuristics}",
-    "GENERIC TERM SINGLE" : "{identifierName} is a generic term",
-    "GENERIC TERM MULTI" : "{identifierName} contains a generic term. This might be okay, as long as the generic term helps others comprehend this identifier",
-    "TYPE NAME MATCH" : "{identifierName} has the same name as its type, {typename}. Generally, an identifier's name should *not* match its type",
-}
-
-primitiveTypeList = ["int", "char", "long", "float", "double", "bool"]
-genericTerms = {"value", "result", "pointer", "output", "input", "content", "ptr",
-                "in", "out", "val", "res", "begin", "end", "start", "finish", "tok",
-                "test", "token", "temp"}
-collectiontypeDict = ["vector", "list", "set", "dictionary", "map", "deque", "stack", "queue", "array"]
-
-inflect = inflect.engine()
-englishDictionary = enchant.Dict("en_US")
 
 class FinalIdentifierReport:
-    def __init__(self, identifierData, plurality, heuristics, dictionary):
+    """
+    This class records all of the data gathered about the code analyzed by the tool.
+    """
+    def __init__(self, identifierData, pluralityViolations, heuristicsViolations, dictionaryViolations):
+        """
+        Parameters
+        ----------
+        identifierData: list<strings> generated from python csv module
+            This is a row passed in from the csv reader. Represents all statically-collected
+            information about an identifier
+        pluralityViolations: str
+            The report generated when we checked the identifier's type and name
+        heuristicsViolations: str
+            The report generated when we checked the identifier's name for heuristics violations
+        dictionaryViolations: str
+            The report generated when we checked the identifier name for dictionary term violations
+        
+        """
+
         self.identifierData = identifierData
-        self.pluralityUsage = plurality
-        self.heuristicsUsage = heuristics
-        self.dictionaryTermUsage = dictionary
+        self.pluralityViolations = pluralityViolations
+        self.heuristicsViolations = heuristicsViolations
+        self.dictionaryViolations = dictionaryViolations
     def __str__(self):
-        formatted = "{}:\n{}\n{}\n{}\n".format(
-                     self.identifierData["filename"] + ':' + self.identifierData["line"],
-                     str() if self.pluralityUsage is None else self.pluralityUsage, 
-                     str() if self.heuristicsUsage is None else self.heuristicsUsage, 
-                     str() if self.dictionaryTermUsage is None else self.dictionaryTermUsage)
+        """
+        When we call print (or anything that converts to string) on FinalIdentifierReport objects, this will
+        generate clean output.
+
+        Returns
+        -------
+        A tab-formatted report of problems present in the FinalIdentifierReport
+        """
+        formattedReport = "{}:\n{}\n{}\n{}\n".format(
+                          self.identifierData["filename"] + ':' + self.identifierData["line"],
+                          str() if self.pluralityViolations is None else self.pluralityViolations, 
+                          str() if self.heuristicsViolations is None else self.heuristicsViolations, 
+                          str() if self.dictionaryViolations is None else self.dictionaryViolations)
+        """        
+        The blank strs due to thre being no problem detected will cause newlines to appear. 
+        The code below strips these out.
+        """
+        cleanedFormattedReport = []
+        for formattedLine in formattedReport.split('\n'):
+            #Keep if there is more than just a newline character
+            if any([character.isprintable() for character in formattedLine.split()]):
+                cleanedFormattedReport.append(formattedLine+'\n')
         
-        #The blank strs will cause newlines to appear. Need to strip those.
-        cleanReport = []
-        for line in formatted.split('\n'):
-            #are any characters NOT a newline??? keep
-            if any([c.isprintable() for c in line.split()]):
-                cleanReport.append(line+'\n')
-        
-        return '\t'.join(cleanReport)
+        return '\t'.join(cleanedFormattedReport)
+
 def WrapTextWithColor(text, color):
+    """
+    This function will correctly wrap text with ANSI color codes that begin the color sequence, then
+    resets color at the end of the text.
+
+    Parameters
+    ----------
+    text: str
+        The text that we want to color
+    color: Fore (colorama ANSI code enum type)
+        The color that we want to wrap the text with
+    
+    Returns
+    -------
+    ANSI-colored text ended with a style reset
+    """
     return color + text + Style.RESET_ALL
 
 def CheckForGenericTerms(identifierData):
+    """
+    This function looks for the presence of Generic Terms, which are terms in identifier names
+    that convey very little domain or problem-specific information. The function checks for
+    two situations: 1) Identifier is a single generic term (i.e., found in the generic terms
+    list above). 2) Identifier has multiple terms in it, and some are generic.
+
+    Parameters
+    ---------
+    identifierData: list<strings> generated from python csv module
+        This is a row passed in from the csv reader. Represents all statically-collected
+        information about an identifier
+    
+    Returns
+    -------
+    An interpolated string filled in with any issues found by the function, or None if no problem
+    was found
+    """
+    genericTerms = {"value", "result", "pointer", "output", "input", "content", "ptr",
+                    "in", "out", "val", "res", "begin", "end", "start", "finish", "tok",
+                    "test", "token", "temp"}
+    
     genericTermMisuses = []
-    splitIdentifierData = ronin.split(identifierData['name'])
+    splitIdentifierName = ronin.split(identifierData['name'])
     IDENTIFIER_OF_LENGTH_ONE = 1
-    if len(splitIdentifierData) == IDENTIFIER_OF_LENGTH_ONE:
-        if splitIdentifierData[0] in genericTerms:
-            genericTermMisuses.append(antiPatternDict["GENERIC TERM SINGLE"]
+    if len(splitIdentifierName) == IDENTIFIER_OF_LENGTH_ONE:
+        if splitIdentifierName[0] in genericTerms:
+            genericTermMisuses.append(antiPatternTypes["GENERIC TERM SINGLE"]
                                      .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED)))
     else:
-        for word in splitIdentifierData:
+        for word in splitIdentifierName:
             if word in genericTerms:
-                genericTermMisuses.append(antiPatternDict["GENERIC TERM MULTI"]
+                genericTermMisuses.append(antiPatternTypes["GENERIC TERM MULTI"]
                                          .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED)))
     return ",".join(genericTermMisuses) if genericTermMisuses else None
 
 def CheckForDictionaryTerms(identifierData):
+    """
+    This function looks for the presence of dictionary terms, which are terms in identifier names
+    that do not appear in an English dictionary. This includes abbreviations and acronyms. This
+    function also looks for excessively short identifier names, arbitrarily set at 2 characters.
+    
+    Parameters
+    ---------
+    identifierData: list<strings> generated from python csv module
+        This is a row passed in from the csv reader. Represents all statically-collected
+        information about an identifier
+    
+    Returns
+    -------
+    An interpolated string filled in with any issues found by the function, or None if no problem
+    was found
+    """
+    englishDictionary = enchant.Dict("en_US")
+
     dictionaryMisuses = []
     IDENTIFIER_WITH_TWO_CHARACTERS = 2
     if len(identifierData['name']) <= IDENTIFIER_WITH_TWO_CHARACTERS:
-        dictionaryMisuses.append(antiPatternDict["TERM LENGTH"]
+        dictionaryMisuses.append(antiPatternTypes["TERM LENGTH"]
                                 .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED)))
-    #check if all words are dictionary terms
-    splitIdentifierData = ronin.split(identifierData['name'])
-    for word in splitIdentifierData:
+    
+    #Check if all words are dictionary terms
+    splitIdentifierName = ronin.split(identifierData['name'])
+    for word in splitIdentifierName:
         if not englishDictionary.check(word):
-            dictionaryMisuses.append(antiPatternDict["DICTIONARY TERM"]
+            dictionaryMisuses.append(antiPatternTypes["DICTIONARY TERM"]
                                     .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED)))
 
     return ",".join(dictionaryMisuses) if dictionaryMisuses else None
 
 def CheckHeuristics(identifierData):
+    """
+    This function looks for the presence of conflicting heuristics, such as mixing camelCase
+    and under_score.
+    
+    Parameters
+    ---------
+    identifierData: list<strings> generated from python csv module
+        This is a row passed in from the csv reader. Represents all statically-collected
+        information about an identifier
+    
+    Returns
+    -------
+    An interpolated string filled in with any issues found by the function, or None if no problem
+    was found
+    """
     underscoreUsages = []
     capitalUsages = []
     lowercaseUsages = []
@@ -101,15 +182,31 @@ def CheckHeuristics(identifierData):
         reportString.append(WrapTextWithColor("lower case letters", Fore.MAGENTA))
     
     if len(reportString) == 3:
-        return (antiPatternDict["MIXED STYLES"]
+        return (antiPatternTypes["MIXED STYLES"]
                .format(identifierName=WrapTextWithColor(identifierData['name'],Fore.RED), heuristics=",".join(reportString)))
     elif any(underscoreUsages) and any(capitalUsages):
-        return (antiPatternDict["MIXED STYLES"]
+        return (antiPatternTypes["MIXED STYLES"]
                .format(identifierName=WrapTextWithColor(identifierData['name'],Fore.RED), heuristics=",".join(reportString)))
     
     return None
 
 def CheckIfIdentifierHasCollectionType(identifierData):
+    """
+    This function checks the current identifier's type to see if it is a collection type
+    
+    Parameters
+    ---------
+    identifierData: list<strings> generated from python csv module
+        This is a row passed in from the csv reader. Represents all statically-collected
+        information about an identifier
+    
+    Returns
+    -------
+    True if it found a type that looks like it represents a collection. False otherwise.
+    """
+    primitiveTypeList = ["int", "char", "long", "float", "double", "bool"]
+    collectiontypeDict = ["vector", "list", "set", "dictionary", "map", "deque", "stack", "queue", "array"]
+
     #If the identifier was used with subscript, it's probably a collection
     if identifierData['array']:
         return True
@@ -126,38 +223,83 @@ def CheckIfIdentifierHasCollectionType(identifierData):
     return False
 
 def CheckTypeVersusPlurality(identifierData):
+    """
+    This function uses CheckIfIdentifierHasCollectionType, then compares the result to the
+    plurality of the given identifier's name. If there is a mismatch, it reports such. For example,
+    a plural identifier with a singular type means that the identifier should probably be plural
+    
+    Parameters
+    ---------
+    identifierData: list<strings> generated from python csv module
+        This is a row passed in from the csv reader. Represents all statically-collected
+        information about an identifier
+    
+    Returns
+    -------
+    An interpolated string filled in with any issues found by the function, or None if no problem
+    was found
+    """
+    inflect = inflectLib.engine()
+
     #plural rules don't apply to function names
     if identifierData['context'] == 'FUNCTION':
         return None
     
-    splitIdentifierData = ronin.split(identifierData['name'])
+    splitIdentifierName = ronin.split(identifierData['name'])
     # First a check to see if identifier name plurality matches its type. If it is a plural identifier,
     # But its type doesn't look like a collection, then this is a linguistic anti-pattern
-    isItPlural = inflect.singular_noun(splitIdentifierData[-1])
+    isItPlural = inflect.singular_noun(splitIdentifierName[-1])
     if isItPlural: #Inflect is telling us that this word is plural.
         shouldIdentifierBePlural = CheckIfIdentifierHasCollectionType(identifierData)
         if not shouldIdentifierBePlural:
-            return (antiPatternDict["PLURAL MISUSE"]
+            return (antiPatternTypes["PLURAL MISUSE"]
                   .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED), 
                           typename=WrapTextWithColor(identifierData['type'], Fore.BLUE)))
     else: #Inflect is telling us that this word is singular.
         shouldIdentifierBePlural = CheckIfIdentifierHasCollectionType(identifierData)
         if shouldIdentifierBePlural:
-            return (antiPatternDict["SINGULAR MISUSE"]
+            return (antiPatternTypes["SINGULAR MISUSE"]
                   .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED),
                           typename=WrapTextWithColor(identifierData['type'], Fore.BLUE)))
     return None
 
 def CheckIfIdentifierAndTypeNamesMatch(identifierData):
+    """
+    This function checks to see if the given identifier has the same name as its type.
+    
+    Parameters
+    ---------
+    identifierData: list<strings> generated from python csv module
+        This is a row passed in from the csv reader. Represents all statically-collected
+        information about an identifier
+    
+    Returns
+    -------
+    An interpolated string filled in with any issues found by the function, or None if no problem
+    was found
+    """
     identifierName = identifierData['name'].lower()
     identifierType = identifierData['type'].lower()
 
     if identifierName == identifierType:
-        return antiPatternDict["TYPE NAME MATCH"].format(identifierName=identifierData['name'], typename=identifierData['type'])
+        return antiPatternTypes["TYPE NAME MATCH"].format(identifierName=identifierData['name'], typename=identifierData['type'])
     
     return None
 
 
 def CheckLocalIdentifier(identifierData):
+    """
+    Runs all of the checks on a given identifiers and produces a FinalIdentifierReport
+    
+    Parameters
+    ---------
+    identifierData: list<strings> generated from python csv module
+        This is a row passed in from the csv reader. Represents all statically-collected
+        information about an identifier
+    
+    Returns
+    -------
+    A FinalIdentifierReport
+    """
     finalReport = FinalIdentifierReport(identifierData, CheckTypeVersusPlurality(identifierData), CheckHeuristics(identifierData), CheckForDictionaryTerms(identifierData))
     return finalReport
