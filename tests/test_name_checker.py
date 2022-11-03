@@ -5,8 +5,11 @@ from strip_ansi import strip_ansi
 class NameCheckerTests(unittest.TestCase):
     
     #Plurality tests
-    def test_identifier_with_no_plural_collection_problems(self):
+    def test_plural_identifier_with_no_plural_collection_problems(self):
         identifier_with_no_plurality_problems = {'context':'DECLARATION','type': 'vector', 'name': 'names','array':0, 'pointer':0}
+        self.assertEqual(None, CheckTypeVersusPlurality(identifier_with_no_plurality_problems))
+    def test_singular_identifier_with_no_plural_collection_problems(self):
+        identifier_with_no_plurality_problems = {'context':'PARAMETER','type': 'int', 'name': 'argc','array':0, 'pointer':0}
         self.assertEqual(None, CheckTypeVersusPlurality(identifier_with_no_plurality_problems))
     def test_plural_identifier_without_collection_type(self):
         plural_identifier_no_collection = {'context':'DECLARATION','type': 'int', 'name': 'tokens','array':0, 'pointer':0}
@@ -15,13 +18,13 @@ class NameCheckerTests(unittest.TestCase):
         singular_identifier_with_collection = {'context':'DECLARATION','type': 'vector', 'name': 'token', 'array':0, 'pointer':0}
         self.assertEqual("Singular identifier token has a collection type vector", strip_ansi(CheckTypeVersusPlurality(singular_identifier_with_collection)))
     def test_singular_identifier_with_pointer_collection_type(self):
-        singular_identifier_with_pointer_collection = {'context':'DECLARATION','type': 'int*', 'name': 'token', 'array':0, 'pointer':1}
+        singular_identifier_with_pointer_collection = {'context':'DECLARATION','type': 'int*', 'name': 'token', 'array':0, 'pointer':'1'}
         self.assertEqual("Singular identifier token has a collection type int*", strip_ansi(CheckTypeVersusPlurality(singular_identifier_with_pointer_collection)))
     def test_singular_identifier_with_array_collection_type(self):
-        singular_identifier_with_array_collection = {'context':'DECLARATION','type': 'unsigned short int', 'name': 'token[]', 'array':1, 'pointer':0}
+        singular_identifier_with_array_collection = {'context':'DECLARATION','type': 'unsigned short int', 'name': 'token[]', 'array':'1', 'pointer':0}
         self.assertEqual("Singular identifier token[] has a collection type unsigned short int", strip_ansi(CheckTypeVersusPlurality(singular_identifier_with_array_collection)))
     def test_should_skip_function_names(self):
-        singular_identifier_with_array_collection = {'context':'FUNCTION', 'type': 'unsigned short int', 'name': 'token[]', 'array':1, 'pointer':0}
+        singular_identifier_with_array_collection = {'context':'FUNCTION', 'type': 'unsigned short int', 'name': 'token[]', 'array':'1', 'pointer':0}
         self.assertEqual(None, CheckTypeVersusPlurality(singular_identifier_with_array_collection))
 
     #Heuristics tests

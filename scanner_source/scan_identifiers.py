@@ -40,6 +40,9 @@ class FinalIdentifierReport:
         -------
         A tab-formatted report of problems present in the FinalIdentifierReport
         """
+        if all(violation is None for violation in [self.pluralityViolations, self.heuristicsViolations, self.dictionaryViolations]):
+            return ''
+
         formattedReport = "{}:\n{}\n{}\n{}\n".format(
                           self.identifierData["filename"] + ':' + self.identifierData["line"],
                           str() if self.pluralityViolations is None else self.pluralityViolations, 
@@ -204,19 +207,20 @@ def CheckIfIdentifierHasCollectionType(identifierData):
     -------
     True if it found a type that looks like it represents a collection. False otherwise.
     """
-    primitiveTypeList = ["int", "char", "long", "float", "double", "bool"]
-    collectiontypeDict = ["vector", "list", "set", "dictionary", "map", "deque", "stack", "queue", "array"]
+    primitiveTypes = ["int", "char", "long", "float", "double", "bool"]
+    collectionTypes = ["vector", "list", "set", "dictionary", "map", "deque", "stack", "queue", "array"]
 
     #If the identifier was used with subscript, it's probably a collection
-    if identifierData['array']:
+    if identifierData['array'] == '1':
         return True
     
     #If the identifier is a pointer and has a primitive type, then it is probably a collection (in C/C++)
-    isTypePrimitive = any(identifierData['type'].strip('[]*').lower() in typename for typename in primitiveTypeList)
-    if identifierData['pointer'] and isTypePrimitive:
+    isTypePrimitive = any(identifierData['type'].strip('[]*').lower() in typename for typename in primitiveTypes)
+    
+    if (identifierData['pointer'] == '1') and isTypePrimitive:
         return True
     
-    isTypeCollection = any(identifierData['type'].strip('[]*').lower() in typename for typename in collectiontypeDict)
+    isTypeCollection = any(identifierData['type'].strip('[]*').lower() in typename for typename in collectionTypes)
     if isTypeCollection:
         return True
     
