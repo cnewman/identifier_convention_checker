@@ -1,0 +1,45 @@
+FROM ubuntu:20.04
+LABEL org.srcml.email="srcmldev@gmail.com" \
+      org.srcml.url="srcml.org" \
+      org.srcml.distro="ubuntu" \
+      org.srcml.osversion="20.04" \
+      org.srcml.architecture="x86_64" \
+      org.srcml.cmake="3.16.3" \
+      org.srcml.boost="1.69.0"
+
+# Avoid prompts for timezone
+ENV TZ=US/Michigan
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+
+# Update and install dependencies
+RUN apt-get update && apt-get install --no-install-recommends -y \
+    enchant \
+    ca-certificates \
+    python3-pip \ 
+    cmake \
+    curl \
+    clang \
+    make \
+    git \
+    libxml2-dev \
+    libxml2-utils \
+    libarchive-dev \
+    man \
+    dpkg-dev \
+    wget \
+    && rm -rf /var/lib/apt/lists/*
+
+# Download and install srcml, checker, spiral, and requirements.
+RUN wget http://131.123.42.38/lmcrs/v1.0.0/srcml_1.0.0-1_ubuntu20.04.deb
+RUN dpkg -i srcml_1.0.0-1_ubuntu20.04.deb
+RUN git clone https://github.com/cnewman/identifier_convention_checker.git
+RUN cd identifier_convention_checker && git submodule set-url srcSAXEventDispatch https://github.com/srcML/srcSAXEventDispatch.git
+RUN cd identifier_convention_checker/srcSAXEventDispatch && git submodule init && git submodule update --remote 
+RUN cd identifier_convention_checker/srcSAXEventDispatch && git submodule set-url srcSAX https://github.com/srcML/srcSAX.git
+RUN cd identifier_convention_checker/srcSAXEventDispatch/srcSAX && git submodule init && git submodule update --remote
+RUN cd identifier_convention_checker && git pull origin && pip3 install -r requirements.txt
+RUN cd identifier_convention_checker && mkdir build && cd build && cmake .. && make -j3
+RUN pip3 install git+https://github.com/casics/spiral.git
+
+# Allow man pages to be installed
+RUN sed -i '/path-exclude=\/usr\/share\/man\/*/c\#path-exclude=\/usr\/share\/man\/*' /etc/dpkg/dpkg.cfg.d/excludes
