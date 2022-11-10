@@ -2,7 +2,7 @@
 A tool that scans identifier names and identifies naming problems.
 
 ## How to use
-You can hook this into a CI using this docker image on Dockerhub: https://hub.docker.com/repository/docker/sourceslicer/identifier_checker_base
+You can hook this into a CI using this docker image on [Dockerhub](https://hub.docker.com/repository/docker/sourceslicer/identifier_checker_base)
 
 You can also create your own docker image using the DOCKERFILE that is part of this repository
 
