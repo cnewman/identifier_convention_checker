@@ -82,7 +82,7 @@ The `run.py` script runs srcML, then runs the checker. You can run them separate
 ## Help, I don't know what srcML is
 You can get srcML from here -- https://www.srcml.org/
 
-Loosely speaking (depending on your OS), you need to get the installer and install. Below is how you do it on systems that support dpkg.
+Loosely speaking (depending on your OS), you need to get the installer and install. Below is how you do it on debian-based systems.
 
 ```
 wget http://131.123.42.38/lmcrs/v1.0.0/srcml_1.0.0-1_ubuntu20.04.deb
@@ -90,4 +90,4 @@ dpkg -i srcml_1.0.0-1_ubuntu20.04.deb
 ```
 
 # Limitations
-Not tested on windows yet :c -- works on Ubuntu, probably most linux distros, and probably mac
+Not tested on windows yet :c -- works on Ubuntu, probably most linux distros, and probably mac. There's a good chance it won't compile in windows yet.
