@@ -1,6 +1,11 @@
 # Identifier Name Checker
 A tool that scans identifier names and identifies naming problems.
 
+## What's in it
+The `src` file contains C++ code that scans srcML archives and extracts information about identifiers from source code files.
+
+The `scanner_source` file contains python code that uses the information extracted via srcML to analyze identifier names for naming anti-patterns.
+
 ## How to use
 You can hook this into a CI using this docker image on [Dockerhub](https://hub.docker.com/repository/docker/sourceslicer/identifier_checker_base)
 
