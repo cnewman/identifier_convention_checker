@@ -36,7 +36,9 @@ apt-get update && apt-get install --no-install-recommends -y \
     wget \
 ```
 
-Now you need to install the checker. First, clone it and install everything in the requirements.txt file, then install Spiral.
+**This is a good time to install srcML, since some of the steps below assume that it is on your machine, and the step above installed srcML's dependencies. Refer to the [srcml](#help-i-dont-know-what-srcml-is) section.**
+
+Now you can install the checker. First, clone it and install everything in the requirements.txt file, then install Spiral.
 ```
 git clone --recursive git@github.com:cnewman/identifier_convention_checker.git
 cd identifier_convention_checker 
@@ -66,8 +68,6 @@ cd build
 cmake .. 
 make -j3
 ```
-
-You also need to install srcML. Refer to the [srcml](#help-i-dont-know-what-srcml-is) section.
 
 ## How to run the tool
 
