@@ -96,3 +96,8 @@ dpkg -i srcml_1.0.0-1_ubuntu20.04.deb
 
 # Limitations
 Not tested on windows yet :c -- works on Ubuntu, probably most linux distros, and probably mac. There's a good chance it won't compile in windows yet.
+
+It only supports languages that srcML supports: C, C++, Java, C# per https://www.srcml.org/. In addition, It hasn't been tested on anything other than C/C++. That may change depending on the needs of people using the tool. So if you use this and you want to see another language, request it!
+
+# Support
+Currently supported by cdnvse [at symbol here] rit (dot symbol) edu
