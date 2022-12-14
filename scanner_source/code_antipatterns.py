@@ -7,4 +7,6 @@ antiPatternTypes = {
     "GENERIC TERM SINGLE" : "{identifierName} is a generic term",
     "GENERIC TERM MULTI" : "{identifierName} contains a generic term. This might be okay, as long as the generic term helps others comprehend this identifier",
     "TYPE NAME MATCH" : "{identifierName} has the same name as its type, {typename}. Generally, an identifier's name should *not* match its type",
+    "TYPE NAME SIMILAR" : "{identifierName} contains words from {typename}. Generally, an identifier's name should *not* refer to its type",
+    "MAGIC NUMBER" : "{identifierName} contains a number. Numbers tend to be mis-used and can cause confusion for developers that don't understand what the number is for",
 }

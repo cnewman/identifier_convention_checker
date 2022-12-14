@@ -11,7 +11,7 @@ class FinalIdentifierReport:
     """
     This class records all of the data gathered about the code analyzed by the tool.
     """
-    def __init__(self, identifierData, pluralityViolations, heuristicsViolations, dictionaryViolations):
+    def __init__(self, identifierData, pluralityViolations, heuristicsViolations, dictionaryViolations, typeAndNameViolations, magicNumberViolations):
         """
         Parameters
         ----------
@@ -24,6 +24,10 @@ class FinalIdentifierReport:
             The report generated when we checked the identifier's name for heuristics violations
         dictionaryViolations: str
             The report generated when we checked the identifier name for dictionary term violations
+        typeAndNameViolations: str
+            The report generated when we checked the identifier name for type and name term violations
+        magicNumberViolations: str
+            The report generated when we checked the identifier name for magic number violations
         
         """
 
@@ -31,6 +35,8 @@ class FinalIdentifierReport:
         self.pluralityViolations = pluralityViolations
         self.heuristicsViolations = heuristicsViolations
         self.dictionaryViolations = dictionaryViolations
+        self.typeAndNameViolations = typeAndNameViolations
+        self.magicNumberViolations = magicNumberViolations
     def __str__(self):
         """
         When we call print (or anything that converts to string) on FinalIdentifierReport objects, this will
@@ -40,14 +46,17 @@ class FinalIdentifierReport:
         -------
         A tab-formatted report of problems present in the FinalIdentifierReport
         """
-        if all(violation is None for violation in [self.pluralityViolations, self.heuristicsViolations, self.dictionaryViolations]):
+        violations = [self.pluralityViolations, self.heuristicsViolations, self.dictionaryViolations, self.typeAndNameViolations, self.magicNumberViolations]
+        if all(violation is None for violation in violations):
             return ''
 
-        formattedReport = "{}:\n{}\n{}\n{}\n".format(
+        formattedReport = "{}:\n{}\n{}\n{}\n{}\n{}\n".format(
                           self.identifierData["filename"] + ':' + self.identifierData["line"],
                           str() if self.pluralityViolations is None else self.pluralityViolations, 
                           str() if self.heuristicsViolations is None else self.heuristicsViolations, 
-                          str() if self.dictionaryViolations is None else self.dictionaryViolations)
+                          str() if self.dictionaryViolations is None else self.dictionaryViolations,
+                          str() if self.typeAndNameViolations is None else self.typeAndNameViolations,
+                          str() if self.magicNumberViolations is None else self.magicNumberViolations,)
         """        
         The blank strs due to thre being no problem detected will cause newlines to appear. 
         The code below strips these out.
@@ -211,13 +220,13 @@ def CheckIfIdentifierHasCollectionType(identifierData):
     collectionTypes = ["vector", "list", "set", "dictionary", "map", "deque", "stack", "queue", "array"]
 
     #If the identifier was used with subscript, it's probably a collection
-    if identifierData['array'] == '1':
+    if int(identifierData['array']) == 1:
         return True
     
     #If the identifier is a pointer and has a primitive type, then it is probably a collection (in C/C++)
     isTypePrimitive = any(identifierData['type'].strip('[]*').lower() in typename for typename in primitiveTypes)
     
-    if (identifierData['pointer'] == '1') and isTypePrimitive:
+    if (int(identifierData['pointer']) == 1) and isTypePrimitive:
         return True
     
     isTypeCollection = any(identifierData['type'].strip('[]*').lower() in typename for typename in collectionTypes)
@@ -269,7 +278,7 @@ def CheckTypeVersusPlurality(identifierData):
 
 def CheckIfIdentifierAndTypeNamesMatch(identifierData):
     """
-    This function checks to see if the given identifier has the same name as its type.
+    This function checks to see if the given identifier has the same, or similar, name as its type.
     
     Parameters
     ---------
@@ -285,11 +294,38 @@ def CheckIfIdentifierAndTypeNamesMatch(identifierData):
     identifierName = identifierData['name'].lower()
     identifierType = identifierData['type'].lower()
 
+    #Exact match between name and type
     if identifierName == identifierType:
         return antiPatternTypes["TYPE NAME MATCH"].format(identifierName=identifierData['name'], typename=identifierData['type'])
     
+    splitIdentifierName = ronin.split(identifierData['name'])
+    
+    #Partial match between name and type. We don't split type name for now; it makes a lot of weird corner cases.
+    if any(identifierType == identifierTerm.lower() for identifierTerm in splitIdentifierName):
+        return antiPatternTypes["TYPE NAME SIMILAR"].format(identifierName=identifierData['name'], typename=identifierData['type'])
+
     return None
 
+def CheckForMagicNumbers(identifierData):
+    """
+    This function checks to see if the given identifier contains numbers (i.e., potentially magic numbers)
+    
+    Parameters
+    ---------
+    identifierData: list<strings> generated from python csv module
+        This is a row passed in from the csv reader. Represents all statically-collected
+        information about an identifier
+    
+    Returns
+    -------
+    An interpolated string filled in with any issues found by the function, or None if no problem
+    was found
+    """
+    splitIdentifierName = ronin.split(identifierData['name'])
+    
+    if any(term.isdigit() for term in splitIdentifierName):
+        return antiPatternTypes["MAGIC NUMBER"].format(identifierName= WrapTextWithColor(identifierData['name'], Fore.RED))
+    return None
 
 def CheckLocalIdentifier(identifierData):
     """
@@ -305,5 +341,10 @@ def CheckLocalIdentifier(identifierData):
     -------
     A FinalIdentifierReport
     """
-    finalReport = FinalIdentifierReport(identifierData, CheckTypeVersusPlurality(identifierData), CheckHeuristics(identifierData), CheckForDictionaryTerms(identifierData))
+    finalReport = FinalIdentifierReport(identifierData, 
+                                        CheckTypeVersusPlurality(identifierData), 
+                                        CheckHeuristics(identifierData), 
+                                        CheckForDictionaryTerms(identifierData),
+                                        CheckIfIdentifierAndTypeNamesMatch(identifierData),
+                                        CheckForMagicNumbers(identifierData))
     return finalReport

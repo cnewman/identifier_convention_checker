@@ -1,5 +1,5 @@
 import unittest
-from scanner_source.scan_identifiers import CheckTypeVersusPlurality, CheckHeuristics, CheckForDictionaryTerms, CheckForGenericTerms, CheckIfIdentifierAndTypeNamesMatch
+from scanner_source.scan_identifiers import CheckTypeVersusPlurality, CheckHeuristics, CheckForDictionaryTerms, CheckForGenericTerms, CheckIfIdentifierAndTypeNamesMatch, CheckForMagicNumbers
 from colorama import init
 from strip_ansi import strip_ansi
 class NameCheckerTests(unittest.TestCase):
@@ -18,13 +18,13 @@ class NameCheckerTests(unittest.TestCase):
         singular_identifier_with_collection = {'context':'DECLARATION','type': 'vector', 'name': 'token', 'array':0, 'pointer':0}
         self.assertEqual("Singular identifier token has a collection type vector", strip_ansi(CheckTypeVersusPlurality(singular_identifier_with_collection)))
     def test_singular_identifier_with_pointer_collection_type(self):
-        singular_identifier_with_pointer_collection = {'context':'DECLARATION','type': 'int*', 'name': 'token', 'array':0, 'pointer':'1'}
+        singular_identifier_with_pointer_collection = {'context':'DECLARATION','type': 'int*', 'name': 'token', 'array':0, 'pointer':1}
         self.assertEqual("Singular identifier token has a collection type int*", strip_ansi(CheckTypeVersusPlurality(singular_identifier_with_pointer_collection)))
     def test_singular_identifier_with_array_collection_type(self):
-        singular_identifier_with_array_collection = {'context':'DECLARATION','type': 'unsigned short int', 'name': 'token[]', 'array':'1', 'pointer':0}
+        singular_identifier_with_array_collection = {'context':'DECLARATION','type': 'unsigned short int', 'name': 'token[]', 'array':1, 'pointer':0}
         self.assertEqual("Singular identifier token[] has a collection type unsigned short int", strip_ansi(CheckTypeVersusPlurality(singular_identifier_with_array_collection)))
     def test_should_skip_function_names(self):
-        singular_identifier_with_array_collection = {'context':'FUNCTION', 'type': 'unsigned short int', 'name': 'token[]', 'array':'1', 'pointer':0}
+        singular_identifier_with_array_collection = {'context':'FUNCTION', 'type': 'unsigned short int', 'name': 'token[]', 'array':1, 'pointer':0}
         self.assertEqual(None, CheckTypeVersusPlurality(singular_identifier_with_array_collection))
 
     #Heuristics tests
@@ -64,5 +64,20 @@ class NameCheckerTests(unittest.TestCase):
         identifier_with_matching_type_name = {'context':'DECLARATION','type': 'ListPointer', 'name': 'listPointer','array':0, 'pointer':0}
         self.assertEqual ("listPointer has the same name as its type, ListPointer. Generally, an identifier's name should *not* match its type", strip_ansi(CheckIfIdentifierAndTypeNamesMatch(identifier_with_matching_type_name)))
     def test_identifier_and_type_names_do_not_match(self):
-        identifier_with_matching_type_name = {'context':'DECLARATION','type': 'ListPointer', 'name': 'employeeMames','array':0, 'pointer':0}
+        identifier_with_matching_type_name = {'context':'DECLARATION','type': 'ListPointer', 'name': 'employeeNames','array':0, 'pointer':0}
         self.assertEqual (None, CheckIfIdentifierAndTypeNamesMatch(identifier_with_matching_type_name))
+    
+    #Type and Name Similar Tests
+    def test_identifier_and_type_names_are_similar(self):
+        identifier_with_matching_type_name = {'context':'DECLARATION','type': 'List', 'name': 'employeeList','array':0, 'pointer':0}
+        self.assertEqual ("employeeList contains words from List. Generally, an identifier's name should *not* refer to its type", strip_ansi(CheckIfIdentifierAndTypeNamesMatch(identifier_with_matching_type_name)))
+    def test_identifier_and_type_names_are_not_similar(self):
+        identifier_with_matching_type_name = {'context':'DECLARATION','type': 'ListPointer', 'name': 'employeeNames','array':0, 'pointer':0}
+        self.assertEqual (None, CheckIfIdentifierAndTypeNamesMatch(identifier_with_matching_type_name))
+    
+    def test_identifier_contains_magic_number(self):
+        identifier_with_matching_type_name = {'context':'DECLARATION','type': 'ListPointer', 'name': 'employeeNames1','array':0, 'pointer':0}
+        self.assertEqual ("employeeNames1 contains a number. Numbers tend to be mis-used and can cause confusion for developers that don't understand what the number is for", strip_ansi(CheckForMagicNumbers(identifier_with_matching_type_name)))
+    def test_identifier_does_not_contain_magic_number(self):
+        identifier_with_matching_type_name = {'context':'DECLARATION','type': 'ListPointer', 'name': 'employeeNames','array':0, 'pointer':0}
+        self.assertEqual (None, CheckForMagicNumbers(identifier_with_matching_type_name))
