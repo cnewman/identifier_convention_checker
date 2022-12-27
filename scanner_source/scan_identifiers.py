@@ -11,7 +11,8 @@ class FinalIdentifierReport:
     """
     This class records all of the data gathered about the code analyzed by the tool.
     """
-    def __init__(self, identifierData, pluralityViolations, heuristicsViolations, dictionaryViolations, typeAndNameViolations, magicNumberViolations):
+    def __init__(self, identifierData, pluralityViolations, heuristicsViolations, dictionaryViolations, 
+                typeAndNameViolations, magicNumberViolations, lengthViolations):
         """
         Parameters
         ----------
@@ -37,6 +38,7 @@ class FinalIdentifierReport:
         self.dictionaryViolations = dictionaryViolations
         self.typeAndNameViolations = typeAndNameViolations
         self.magicNumberViolations = magicNumberViolations
+        self.lengthViolations = lengthViolations
     def __str__(self):
         """
         When we call print (or anything that converts to string) on FinalIdentifierReport objects, this will
@@ -46,17 +48,18 @@ class FinalIdentifierReport:
         -------
         A tab-formatted report of problems present in the FinalIdentifierReport
         """
-        violations = [self.pluralityViolations, self.heuristicsViolations, self.dictionaryViolations, self.typeAndNameViolations, self.magicNumberViolations]
+        violations = [self.pluralityViolations, self.heuristicsViolations, self.dictionaryViolations, self.typeAndNameViolations, self.magicNumberViolations, self.lengthViolations]
         if all(violation is None for violation in violations):
             return ''
 
-        formattedReport = "{}:\n{}\n{}\n{}\n{}\n{}\n".format(
+        formattedReport = "{}:\n{}\n{}\n{}\n{}\n{}\n{}\n".format(
                           self.identifierData["filename"] + ':' + self.identifierData["line"],
                           str() if self.pluralityViolations is None else self.pluralityViolations, 
                           str() if self.heuristicsViolations is None else self.heuristicsViolations, 
                           str() if self.dictionaryViolations is None else self.dictionaryViolations,
                           str() if self.typeAndNameViolations is None else self.typeAndNameViolations,
-                          str() if self.magicNumberViolations is None else self.magicNumberViolations,)
+                          str() if self.magicNumberViolations is None else self.magicNumberViolations,
+                          str() if self.lengthViolations is None else self.lengthViolations,)
         """        
         The blank strs due to thre being no problem detected will cause newlines to appear. 
         The code below strips these out.
@@ -123,11 +126,29 @@ def CheckForGenericTerms(identifierData):
                                          .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED)))
     return ",".join(genericTermMisuses) if genericTermMisuses else None
 
+def CheckForIdentifierLength(identifierData):
+    """
+    This function looks for excessively short identifier names, arbitrarily set at 2 characters.
+    
+    Parameters
+    ---------
+    identifierData: list<strings> generated from python csv module
+        This is a row passed in from the csv reader. Represents all statically-collected
+        information about an identifier
+    
+    Returns
+    -------
+    An interpolated string filled in with any issues found by the function, or None if no problem
+    was found
+    """
+    IDENTIFIER_WITH_TWO_CHARACTERS = 2
+    if len(identifierData['name']) <= IDENTIFIER_WITH_TWO_CHARACTERS:
+        return antiPatternTypes["TERM LENGTH"].format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED))
+
 def CheckForDictionaryTerms(identifierData):
     """
     This function looks for the presence of dictionary terms, which are terms in identifier names
-    that do not appear in an English dictionary. This includes abbreviations and acronyms. This
-    function also looks for excessively short identifier names, arbitrarily set at 2 characters.
+    that do not appear in an English dictionary. This includes abbreviations and acronyms.
     
     Parameters
     ---------
@@ -143,11 +164,6 @@ def CheckForDictionaryTerms(identifierData):
     englishDictionary = enchant.Dict("en_US")
 
     dictionaryMisuses = []
-    IDENTIFIER_WITH_TWO_CHARACTERS = 2
-    if len(identifierData['name']) <= IDENTIFIER_WITH_TWO_CHARACTERS:
-        dictionaryMisuses.append(antiPatternTypes["TERM LENGTH"]
-                                .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED)))
-    
     #Check if all words are dictionary terms
     splitIdentifierName = ronin.split(identifierData['name'])
     for word in splitIdentifierName:
@@ -346,5 +362,6 @@ def CheckLocalIdentifier(identifierData):
                                         CheckHeuristics(identifierData), 
                                         CheckForDictionaryTerms(identifierData),
                                         CheckIfIdentifierAndTypeNamesMatch(identifierData),
-                                        CheckForMagicNumbers(identifierData))
+                                        CheckForMagicNumbers(identifierData),
+                                        CheckForIdentifierLength(identifierData))
     return finalReport
