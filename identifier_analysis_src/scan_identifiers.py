@@ -4,7 +4,7 @@ import enchant
 from enum import Enum
 from spiral import ronin
 from colorama import Fore, Style, init
-from scanner_source.code_antipatterns import antiPatternTypes
+from identifier_analysis_src.code_antipatterns import antiPatternTypes
 
 
 class FinalIdentifierReport:
@@ -161,6 +161,12 @@ def CheckForDictionaryTerms(identifierData):
     An interpolated string filled in with any issues found by the function, or None if no problem
     was found
     """
+    # ignore certain domain terms in function names and arguments
+    ignore_list = ['main', 'argc', 'argv']
+    if identifierData['context'] in ['PARAMETER', 'FUNCTION']:
+        if identifierData['name'] in ignore_list:
+            return None
+
     englishDictionary = enchant.Dict("en_US")
 
     dictionaryMisuses = []

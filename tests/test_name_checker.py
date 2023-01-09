@@ -1,8 +1,8 @@
 import unittest
-from scanner_source.scan_identifiers import CheckTypeVersusPlurality, CheckHeuristics, CheckForDictionaryTerms, CheckForGenericTerms, CheckIfIdentifierAndTypeNamesMatch, CheckForMagicNumbers, CheckForIdentifierLength
+from identifier_analysis_src.scan_identifiers import CheckTypeVersusPlurality, CheckHeuristics, CheckForDictionaryTerms, CheckForGenericTerms, CheckIfIdentifierAndTypeNamesMatch, CheckForMagicNumbers, CheckForIdentifierLength
 from colorama import init
 from strip_ansi import strip_ansi
-from scanner_source.code_antipatterns import antiPatternTypes
+from identifier_analysis_src.code_antipatterns import antiPatternTypes
 class NameCheckerTests(unittest.TestCase):
     
     #Plurality tests

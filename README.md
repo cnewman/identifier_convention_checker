@@ -2,9 +2,9 @@
 A tool that scans identifier names and identifies naming problems.
 
 ## What's in it
-The `src` file contains C++ code that scans srcML archives and extracts information about identifiers from source code files.
+The `fact_extraction_src` file contains C++ code that scans srcML archives and extracts information about identifiers from source code files.
 
-The `scanner_source` file contains python code that uses the information extracted via srcML to analyze identifier names for naming anti-patterns.
+The `identifier_analysis_src` file contains python code that uses the information extracted via srcML to analyze identifier names for naming anti-patterns.
 
 ## How to use
 You can hook this into a CI using this docker image on [Dockerhub](https://hub.docker.com/repository/docker/sourceslicer/identifier_checker_base)
@@ -79,10 +79,10 @@ make -j3
 This assumes the incoming file is a file with source code, or a directory.
 
 ```
-python3 run.py [file or directory containing code]
+python3 check_identifiers.py [file or directory containing code]
 ```
 
-The `run.py` script runs srcML, then runs the checker. You can run them separately (see run.py to understand how), but the easiest way is to just use run.py; running them separately is not well-supported. We will document how to run them separately in the future.
+The `check_identifiers.py` script runs srcML, then runs the checker. You can run them separately (see check_identifiers.py to understand how), but the easiest way is to just use check_identifiers.py; running them separately is not well-supported. We will document how to run them separately in the future.
 
 ## Help, I don't know what srcML is
 You can get srcML from here -- https://www.srcml.org/

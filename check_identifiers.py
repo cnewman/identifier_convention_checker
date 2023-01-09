@@ -1,4 +1,4 @@
-import scanner_source.scan_identifiers as identifier_analysis
+import identifier_analysis_src.scan_identifiers as identifier_analysis
 import sys, subprocess, csv
 
 if __name__ == '__main__':
