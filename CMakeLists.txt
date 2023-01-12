@@ -33,6 +33,10 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 
+if(NOT WIN32)
+set(CMAKE_INSTALL_PREFIX "/usr/local")
+endif()
+
 # include needed includes
 include_directories(/usr/local/include
                     ${LIBXML2_INCLUDE_DIR}

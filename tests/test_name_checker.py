@@ -93,3 +93,11 @@ class NameCheckerTests(unittest.TestCase):
     def test_identifier_does_not_contain_magic_number(self):
         identifier_with_matching_type_name = {'context':'DECLARATION','type': 'ListPointer', 'name': 'employeeNames','array':0, 'pointer':0}
         self.assertEqual (None, CheckForMagicNumbers(identifier_with_matching_type_name))
+
+    #Test that we ignore certain domain names like argv
+    def test_language_domain_names_ignored_by_dictionary_rule(self):
+        identifier_with_matching_type_name = {'context':'PARAMETER','type': 'char[]', 'name': 'argv','array':1, 'pointer':0}
+        self.assertEqual (None, CheckForDictionaryTerms(identifier_with_matching_type_name))
+    def test_language_domain_names_ignored_by_plurality_rule(self):
+        identifier_with_matching_type_name = {'context':'PARAMETER','type': 'char[]', 'name': 'argv','array':1, 'pointer':0}
+        self.assertEqual (None, CheckTypeVersusPlurality(identifier_with_matching_type_name))

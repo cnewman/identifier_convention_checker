@@ -274,6 +274,11 @@ def CheckTypeVersusPlurality(identifierData):
     An interpolated string filled in with any issues found by the function, or None if no problem
     was found
     """
+    ignore_list = ['main', 'argc', 'argv']
+    if identifierData['context'] in ['PARAMETER', 'FUNCTION']:
+        if identifierData['name'] in ignore_list:
+            return None
+    
     inflect = inflectLib.engine()
 
     #plural rules don't apply to function names

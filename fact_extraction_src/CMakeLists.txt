@@ -6,3 +6,4 @@ file(GLOB HEADER *.hpp)
 
 add_executable(checkidentifiers ${DISPATCHER_SOURCE} ${DISPATCHER_HEADER} ${HEADER} ${SOURCE})
 target_link_libraries(checkidentifiers srcsaxeventdispatch srcsax_static ${LIBXML2_LIBRARIES})
+install(TARGETS checkidentifiers DESTINATION bin)
