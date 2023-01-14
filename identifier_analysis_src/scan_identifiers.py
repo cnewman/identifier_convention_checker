@@ -174,10 +174,10 @@ def CheckForDictionaryTerms(identifierData):
     splitIdentifierName = ronin.split(identifierData['name'])
     for word in splitIdentifierName:
         if not englishDictionary.check(word):
-            dictionaryMisuses.append(antiPatternTypes["DICTIONARY TERM"]
-                                    .format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED)))
+            dictionaryMisuses.append(word)
 
-    return ",".join(dictionaryMisuses) if dictionaryMisuses else None
+    return antiPatternTypes["DICTIONARY TERM"].format(identifierName=WrapTextWithColor(identifierData['name'], Fore.RED),
+                                                      words=",".join([WrapTextWithColor(word, Fore.MAGENTA) for word in dictionaryMisuses])) if dictionaryMisuses else None
 
 def CheckHeuristics(identifierData):
     """

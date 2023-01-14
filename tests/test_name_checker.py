@@ -43,8 +43,8 @@ class NameCheckerTests(unittest.TestCase):
     
     #Dictionary term tests
     def test_identifier_with_dictionary_term_misuse(self):
-        identifier_with_dictionary_term_misuse = {'context':'DECLARATION','type': 'int', 'name': 'tkn','array':0, 'pointer':0}
-        self.assertEqual (antiPatternTypes["DICTIONARY TERM"].format(identifierName="tkn"),
+        identifier_with_dictionary_term_misuse = {'context':'DECLARATION','type': 'int', 'name': 'misuse_tkn','array':0, 'pointer':0}
+        self.assertEqual (antiPatternTypes["DICTIONARY TERM"].format(identifierName="misuse_tkn", words="tkn"),
                           strip_ansi(CheckForDictionaryTerms(identifier_with_dictionary_term_misuse)))
     def test_identifier_with_good_dictionary_term_usage(self):
         identifier_with_good_dictionary_term_usage = {'context':'DECLARATION','type': 'int', 'name': 'token','array':0, 'pointer':0}

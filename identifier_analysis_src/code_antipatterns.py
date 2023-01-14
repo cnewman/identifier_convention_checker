@@ -1,6 +1,6 @@
 antiPatternTypes = {
     "TERM LENGTH" : "{identifierName} has less than 3 characters in it. Please only use dictionary terms, or well-known abbreviations.",
-    "DICTIONARY TERM" : "{identifierName} is not a dictionary term. This may be okay if the term is a **well known** abbreviation.",
+    "DICTIONARY TERM" : "{identifierName} contains the non-dictionary terms: {words}. This may be okay if all terms are **well-known** abbreviations",
     "PLURAL MISUSE" : "Plural identifier {identifierName} has a non-collection type {typename}. Consider making the identifier name plural, or changing type.",
     "SINGULAR MISUSE" : "Singular identifier {identifierName} has a collection type {typename}. Consider making the identifier plural, or changing the type.",
     "MIXED STYLES" : "{identifierName} mixes styles, containing {heuristics}. Please use a consistent style.",
