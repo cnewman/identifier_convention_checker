@@ -288,6 +288,10 @@ def CheckTypeVersusPlurality(identifierData):
     if identifierData['context'] == 'FUNCTION':
         return None
     
+    #char[] is an exception to the rule because it's used for strings
+    if 'char' in identifierData['type']:
+        return None
+    
     splitIdentifierName = ronin.split(identifierData['name'])
     # First a check to see if identifier name plurality matches its type. If it is a plural identifier,
     # But its type doesn't look like a collection, then this is a linguistic anti-pattern
