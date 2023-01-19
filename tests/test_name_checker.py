@@ -1,5 +1,5 @@
 import unittest
-from identifier_analysis_src.scan_identifiers import CheckTypeVersusPlurality, CheckHeuristics, CheckForDictionaryTerms, CheckForGenericTerms, CheckIfIdentifierAndTypeNamesMatch, CheckForMagicNumbers, CheckForIdentifierLength
+from identifier_analysis_src.scan_identifiers import CheckTypeVersusPlurality, CheckHeuristics, CheckForDictionaryTerms, CheckForGenericTerms, CheckIfIdentifierAndTypeNamesMatch, CheckForNumberInName, CheckForIdentifierLength
 from colorama import init
 from strip_ansi import strip_ansi
 from identifier_analysis_src.code_antipatterns import antiPatternTypes
@@ -87,12 +87,12 @@ class NameCheckerTests(unittest.TestCase):
         identifier_with_matching_type_name = {'context':'DECLARATION','type': 'ListPointer', 'name': 'employeeNames','array':0, 'pointer':0}
         self.assertEqual (None, CheckIfIdentifierAndTypeNamesMatch(identifier_with_matching_type_name))
     
-    def test_identifier_contains_magic_number(self):
+    def test_identifier_contains_number_in_name(self):
         identifier_with_matching_type_name = {'context':'DECLARATION','type': 'ListPointer', 'name': 'employeeNames1','array':0, 'pointer':0}
-        self.assertEqual (antiPatternTypes["MAGIC NUMBER"].format(identifierName="employeeNames1"), strip_ansi(CheckForMagicNumbers(identifier_with_matching_type_name)))
-    def test_identifier_does_not_contain_magic_number(self):
+        self.assertEqual (antiPatternTypes["NUMBER IN NAME"].format(identifierName="employeeNames1"), strip_ansi(CheckForNumberInName(identifier_with_matching_type_name)))
+    def test_identifier_does_not_contain_number_in_name(self):
         identifier_with_matching_type_name = {'context':'DECLARATION','type': 'ListPointer', 'name': 'employeeNames','array':0, 'pointer':0}
-        self.assertEqual (None, CheckForMagicNumbers(identifier_with_matching_type_name))
+        self.assertEqual (None, CheckForNumberInName(identifier_with_matching_type_name))
 
     #Test that we ignore certain domain names like argv
     def test_language_domain_names_ignored_by_dictionary_rule(self):

@@ -1,6 +1,7 @@
-import csv, sys
+import csv, sys, textwrap
 import inflect as inflectLib
 import enchant
+from shutil import get_terminal_size
 from enum import Enum
 from spiral import ronin
 from colorama import Fore, Style, init
@@ -12,7 +13,7 @@ class FinalIdentifierReport:
     This class records all of the data gathered about the code analyzed by the tool.
     """
     def __init__(self, identifierData, pluralityViolations, heuristicsViolations, dictionaryViolations, 
-                typeAndNameViolations, magicNumberViolations, lengthViolations):
+                typeAndNameViolations, numberInNameViolations, lengthViolations):
         """
         Parameters
         ----------
@@ -27,8 +28,8 @@ class FinalIdentifierReport:
             The report generated when we checked the identifier name for dictionary term violations
         typeAndNameViolations: str
             The report generated when we checked the identifier name for type and name term violations
-        magicNumberViolations: str
-            The report generated when we checked the identifier name for magic number violations
+        numberInNameViolations: str
+            The report generated when we checked the identifier name for number in name violations
         
         """
 
@@ -37,7 +38,7 @@ class FinalIdentifierReport:
         self.heuristicsViolations = heuristicsViolations
         self.dictionaryViolations = dictionaryViolations
         self.typeAndNameViolations = typeAndNameViolations
-        self.magicNumberViolations = magicNumberViolations
+        self.numberInNameViolations = numberInNameViolations
         self.lengthViolations = lengthViolations
     def __str__(self):
         """
@@ -48,29 +49,31 @@ class FinalIdentifierReport:
         -------
         A tab-formatted report of problems present in the FinalIdentifierReport
         """
-        violations = [self.pluralityViolations, self.heuristicsViolations, self.dictionaryViolations, self.typeAndNameViolations, self.magicNumberViolations, self.lengthViolations]
+        violations = [self.pluralityViolations, self.heuristicsViolations, self.dictionaryViolations, self.typeAndNameViolations, self.numberInNameViolations, self.lengthViolations]
         if all(violation is None for violation in violations):
             return ''
-
-        formattedReport = "{}:\n{}\n{}\n{}\n{}\n{}\n{}\n".format(
+        
+        formattedReport = "---------------------\n{}:\n{}\n{}\n{}\n{}\n{}\n{}\n----------------------".format(
                           self.identifierData["filename"] + ':' + self.identifierData["line"],
                           str() if self.pluralityViolations is None else self.pluralityViolations, 
                           str() if self.heuristicsViolations is None else self.heuristicsViolations, 
                           str() if self.dictionaryViolations is None else self.dictionaryViolations,
                           str() if self.typeAndNameViolations is None else self.typeAndNameViolations,
-                          str() if self.magicNumberViolations is None else self.magicNumberViolations,
+                          str() if self.numberInNameViolations is None else self.numberInNameViolations,
                           str() if self.lengthViolations is None else self.lengthViolations,)
         """        
         The blank strs due to thre being no problem detected will cause newlines to appear. 
         The code below strips these out.
         """
-        cleanedFormattedReport = []
-        for formattedLine in formattedReport.split('\n'):
+        strippedFormattedReport = []
+        for index, formattedLine in enumerate(formattedReport.split('\n')):
             #Keep if there is more than just a newline character
-            if any([character.isprintable() for character in formattedLine.split()]):
-                cleanedFormattedReport.append(formattedLine+'\n')
+            if (any([character.isprintable() for character in formattedLine.split()])) and (index >= 2):
+                strippedFormattedReport.append(formattedLine)
+            elif index < 2: # Keep the header lines in positions 0 and 1
+                strippedFormattedReport.append(formattedLine)
         
-        return '\t'.join(cleanedFormattedReport)
+        return '\n\n'.join(strippedFormattedReport)
 
 def WrapTextWithColor(text, color):
     """
@@ -333,9 +336,9 @@ def CheckIfIdentifierAndTypeNamesMatch(identifierData):
 
     return None
 
-def CheckForMagicNumbers(identifierData):
+def CheckForNumberInName(identifierData):
     """
-    This function checks to see if the given identifier contains numbers (i.e., potentially magic numbers)
+    This function checks to see if the given identifier contains numbers (i.e., potentially number in name violations)
     
     Parameters
     ---------
@@ -351,7 +354,7 @@ def CheckForMagicNumbers(identifierData):
     splitIdentifierName = ronin.split(identifierData['name'])
     
     if any(term.isdigit() for term in splitIdentifierName):
-        return antiPatternTypes["MAGIC NUMBER"].format(identifierName= WrapTextWithColor(identifierData['name'], Fore.RED))
+        return antiPatternTypes["NUMBER IN NAME"].format(identifierName= WrapTextWithColor(identifierData['name'], Fore.RED))
     return None
 
 def CheckLocalIdentifier(identifierData):
@@ -373,6 +376,6 @@ def CheckLocalIdentifier(identifierData):
                                         CheckHeuristics(identifierData), 
                                         CheckForDictionaryTerms(identifierData),
                                         CheckIfIdentifierAndTypeNamesMatch(identifierData),
-                                        CheckForMagicNumbers(identifierData),
+                                        CheckForNumberInName(identifierData),
                                         CheckForIdentifierLength(identifierData))
     return finalReport
