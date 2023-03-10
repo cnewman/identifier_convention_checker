@@ -1,8 +1,14 @@
 import identifier_analysis_src.scan_identifiers as identifier_analysis
-import sys, subprocess, csv
+import sys, subprocess, csv, argparse
+VERSION = "1.0.0"
 
 if __name__ == '__main__':
-    srcml_process = subprocess.Popen(['srcml', '--position', sys.argv[1]], stdout=subprocess.PIPE)
+    command_line_parser = argparse.ArgumentParser()
+    command_line_parser.add_argument("--version", action="version", version="%(prog)s " + VERSION)
+    command_line_parser.add_argument("--target")
+    args = command_line_parser.parse_args()
+    
+    srcml_process = subprocess.Popen(['srcml', '--position', args.target], stdout=subprocess.PIPE)
     srcml_out = srcml_process.communicate()
     
     extract_identifiers_process = subprocess.Popen(['checkidentifiers'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
